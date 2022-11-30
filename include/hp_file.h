@@ -1,13 +1,12 @@
 #ifndef HP_FILE_H
 #define HP_FILE_H
 #include <record.h>
-
+#define HP_ERROR -1
 
 
 /* Η δομή HP_info κρατάει μεταδεδομένα που σχετίζονται με το αρχείο σωρού*/
 typedef struct {
-    //Ενδεικτικά:
-    
+    //Ενδεικτικά: Ίσως και ενα array απο registers +blockss που θα προσομοιωνει τον buffer+ τελευταια εγγραφη
     int fileDesc; /*αναγνωριστικός αριθμός ανοίγματος αρχείου από το
     επίπεδο block*/
     Record_Attribute keyAttribute; /*Προσδιορίζει το κλειδί του
