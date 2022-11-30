@@ -15,8 +15,28 @@
   }                         \
 }
 
-int HP_CreateFile(char *fileName, int attr){
-    return -1;
+int HP_CreateFile(char *fileName, Record_Attribute attr){
+
+  CALL_BF(BF_CreateFile(filename));
+  int desc;
+  CALL_BF(BF_OpenFile(filename,&desc)); //Creating and opening the heap file in order to place the metadata we need
+
+  BF_Block* block;
+  BF_Block_Init(&block);
+  CALL_BF(BF_AllocateBlock(desc, block)); //Allocating the first block for the heap file
+
+  char* before= BF_Block_GetData(block); //Getting its data
+  memcpy(before, &attr, sizeof(Record_Attribute)); //Using memcpy to change the block's data 
+
+  //Make it pinned so that we won't be removed.
+
+  BF_Block_SetDirty(block); 
+ //pinned????
+
+  BF_Block_Destroy(block); //Taking care of the bytes allocated from BF_Block_Init()
+  CALL_BF(BF_CloseFile(desc));
+
+  return 0;
 }
 
 HP_info* HP_OpenFile(char *fileName){
