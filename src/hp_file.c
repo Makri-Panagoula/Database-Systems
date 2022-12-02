@@ -34,9 +34,9 @@ int HP_CreateFile(char *fileName){
   memcpy(before, "Heap", strlen("Heap")+1);  
 
   BF_Block_SetDirty(block); 
-  CALL(BF_UnpinBlock(block));
+  CALL_BF(BF_UnpinBlock(block));
 
-  BF_Block_Destroy(block); 
+  BF_Block_Destroy(&block); 
   CALL_BF(BF_CloseFile(desc));
   return 0;
 }
@@ -52,7 +52,7 @@ HP_info* HP_OpenFile(char *fileName){
 
   int desc;
   CALL_BF(BF_OpenFile(fileName,&desc)); 
-  CALL_BF(BF_GetBlock(desc, 0 ,&metadata)); 
+  CALL_BF(BF_GetBlock(desc, 0 ,metadata)); 
   char* heap = (char*) BF_Block_GetData(metadata);
   printf("\n%s",heap);
 
@@ -113,7 +113,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
 
     //Take care of the block
     BF_Block_SetDirty(new); 
-    CALL(BF_UnpinBlock(new));      
+    CALL_BF(BF_UnpinBlock(new));      
     BF_Block_Destroy(&new);
   }
 
@@ -125,7 +125,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
   }
 
   BF_Block_SetDirty(prev); 
-  CALL(BF_UnpinBlock(prev));  
+  CALL_BF(BF_UnpinBlock(prev));  
 
   BF_Block_Destroy(&prev);
   return 0;
@@ -147,10 +147,10 @@ int HP_GetAllEntries(HP_info* header_info, int id){
 
     for(int j=0; j < records_per_block; j++) {        //For each record inside the block
 
-      Record* rec= cur_data + j * sizeof(Record);
+      Record* rec= (Record*) (cur_data + j * sizeof(Record));
 
       if(rec->id == id) {
-        printRecord(rec);
+        printRecord(*rec);
       }
     } 
   }
