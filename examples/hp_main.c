@@ -18,10 +18,12 @@
   }
 
 int main() {
+
   BF_Init(LRU);
 
- HP_CreateFile(FILE_NAME);
- HP_info* info = HP_OpenFile(FILE_NAME);
+  int id = HP_CreateFile(FILE_NAME);
+  printf("%d\n",id);
+  HP_info* info = HP_OpenFile(FILE_NAME);
   printf("%p\n",info); 
 
 /*
