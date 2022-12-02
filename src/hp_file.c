@@ -88,12 +88,12 @@ int HP_InsertEntry(HP_info* header_info, Record record){
   int blocks;
   BF_Block* prev;
   BF_Block_Init(&prev);
+  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
 
   //Getting data from the last block 
   CALL_BF(BF_GetBlock(header_info->fileDesc , blocks -1  , prev));   
   char* prev_data = BF_Block_GetData(prev);
 
-  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
  //Block enumeration starts from 0
 
   if(to_add > bytes_left || blocks == 1) {
