@@ -36,6 +36,7 @@ int main() {
     printf("%d",code);
   }
 /*
+
   printf("RUN PrintAllEntries\n");
   int id = rand() % RECORDS_NUM;
   printf("\nSearching for: %d",id);

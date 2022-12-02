@@ -130,7 +130,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
   return 0;
 }
 
-int HP_GetAllEntries(HP_info* header_info, int id){
+int HP_GetAllEntries(HP_info* header_info, int id ){
 
   BF_Block* cur;
   BF_Block_Init(&cur);
