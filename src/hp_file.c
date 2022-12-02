@@ -51,10 +51,9 @@ HP_info* HP_OpenFile(char *fileName){
  //Get metadata from block 0 to initialize the struct
 
   int desc;
-  CALL_BF(BF_OpenFile(fileName,&desc)); 
-  CALL_BF(BF_GetBlock(desc, 0 ,metadata)); 
+  BF_OpenFile(fileName,&desc); 
+  BF_GetBlock(desc, 0 ,metadata); 
   char* heap = (char*) BF_Block_GetData(metadata);
-  printf("\n%s",heap);
 
   //If the key holds an unexpected value, we don't have a heap file 
 
@@ -66,7 +65,7 @@ HP_info* HP_OpenFile(char *fileName){
   info->bytes = 0;
 
   BF_Block_Destroy(&metadata);
-  CALL_BF(BF_CloseFile(desc));
+  BF_CloseFile(desc);
   
   return info;
 }
@@ -131,7 +130,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
   return 0;
 }
 
-int HP_GetAllEntries(HP_info* header_info, int id){
+int HP_GetAllEntries(HP_info* header_info, int id ){
 
   BF_Block* cur;
   BF_Block_Init(&cur);
