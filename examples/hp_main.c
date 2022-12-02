@@ -20,9 +20,11 @@
 int main() {
   BF_Init(LRU);
 
-  HP_CreateFile(FILE_NAME);
-  HP_info* info = HP_OpenFile(FILE_NAME);
+ HP_CreateFile(FILE_NAME);
+ HP_info* info = HP_OpenFile(FILE_NAME);
+  printf("%p\n",info); 
 
+/*
   Record record;
   srand(12569874);
   int r;
@@ -39,4 +41,5 @@ int main() {
 
   HP_CloseFile(info);
   BF_Close();
+ */ 
 }
