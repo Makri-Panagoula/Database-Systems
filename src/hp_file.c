@@ -59,7 +59,7 @@ HP_info* HP_OpenFile(char *fileName){
   BF_GetBlock(desc, 0, metadata); 
   char* heap = (char*)BF_Block_GetData(metadata);
 
-  // If the key holds an unexpected value, then this is not a heap file 
+  // If the key holds an unexpected value, then this is not a heap file, we return NULL.
   if(strcmp(heap,"Heap") != 0)
     return NULL;  
 
@@ -74,13 +74,16 @@ HP_info* HP_OpenFile(char *fileName){
  //The number of records per block will be the available bytes divided by the size of each record (records have a fixed size).
 
   info->tot_records = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
-
+  
+  //We are done with the block.
+  BF_UnpinBlock(metadata)
   BF_Block_Destroy(&metadata);
   return info;
 }
 
 
 int HP_CloseFile(HP_info* header_info ){
+  
   // Close file with the identical fileDesc
   CALL_BF(BF_CloseFile(header_info->fileDesc));
   return 0;
