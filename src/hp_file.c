@@ -22,7 +22,7 @@ int HP_CreateFile(char *fileName){
 
   // Open file
   int desc;
-  CALL_BF(BF_OpenFile(fileName,&desc)); 
+  BF_OpenFile(fileName, &desc); 
 
   // Create a block in the file 
   BF_Block* block;
@@ -44,40 +44,38 @@ int HP_CreateFile(char *fileName){
   return 0;
 }
 
-//Μπορει να κραταει και την πληροφορια οτι το αρχειο ειναι οντως αρχειο σωρου
-
+// Κραταει και την πληροφορια οτι το αρχειο ειναι οντως αρχειο σωρου
 HP_info* HP_OpenFile(char *fileName){
+  // Open file 
+  int desc;
+  BF_OpenFile(fileName, &desc); 
 
   BF_Block* metadata;
   BF_Block_Init(&metadata);
 
- //Get metadata from block 0 to initialize the struct
+  // Get data from first block
+  BF_GetBlock(desc, 0, metadata); 
+  char* heap = (char*)BF_Block_GetData(metadata);
 
-  int desc;
-  BF_OpenFile(fileName,&desc); 
-  BF_GetBlock(desc, 0 ,metadata); 
-  char* heap = (char*) BF_Block_GetData(metadata);
-
-  //If the key holds an unexpected value, we don't have a heap file 
-
+  // If the key holds an unexpected value, then this is not a heap file 
   if(strcmp(heap,"Heap") != 0)
-    return  NULL;
+    return NULL;  
 
   HP_info* info = malloc(sizeof(HP_info));
   info->fileDesc = desc;
   info->bytes = 0;
 
-  BF_Block_Destroy(&metadata);
-  BF_CloseFile(desc);
+  // We don't need these
+  // BF_Block_Destroy(&metadata);
+  // BF_CloseFile(desc);
   
   return info;
 }
 
 
-int HP_CloseFile( HP_info* header_info ){
-
+int HP_CloseFile(HP_info* header_info ){
+  // Close file with the identical fileDesc
   CALL_BF(BF_CloseFile(header_info->fileDesc));
-
   return 0;
 }
 
