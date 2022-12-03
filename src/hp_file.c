@@ -24,19 +24,25 @@ int HP_CreateFile(char *fileName){
   //Create the heap file
   CALL_BF(BF_CreateFile(fileName));
 
-  // Create a block in the file and save in it some arbitrary metadata.
+  // Open the file to get access to it.
   
   int desc;
   BF_OpenFile(fileName, &desc); 
+
+  //Get the data of the block and write to it something so as to
+  //be identified as a heap file.
 
   CALL_BF(BF_AllocateBlock(desc, block)); 
   char* before= BF_Block_GetData(block);
   memcpy(before, "Heap", strlen("Heap")+1);  
 
+ //We have changed the content of the block, so we set it dirty to be recopied in hard disk.
+ //We unpin, since we are done with current block and its space can be replaced.
+
   BF_Block_SetDirty(block); 
   CALL_BF(BF_UnpinBlock(block));
 
-  BF_Block_Destroy(&block); 
+  BF_Block_Destroy(&block);       //Take care of initialized block
   CALL_BF(BF_CloseFile(desc));
   return 0;
 }
@@ -63,7 +69,10 @@ HP_info* HP_OpenFile(char *fileName){
 
   //The first block holds only the metadata
   info->records = 0;
-  //The bytes of records per block will be its total size minus the pointer part (its metadata)
+
+  //The available bytes for records per block will be its total size minus the pointer part (its metadata)
+ //The number of records per block will be the available bytes divided by the size of each record (records have a fixed size).
+
   info->tot_records = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
 
   BF_Block_Destroy(&metadata);
@@ -80,17 +89,18 @@ int HP_CloseFile(HP_info* header_info ){
 
 int HP_InsertEntry(HP_info* header_info, Record record){
 
+  //Getting data from the last block 
+
   int blocks;
   BF_Block* prev;
   BF_Block_Init(&prev);
-  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
-
-  //Getting data from the last block 
- //Block enumeration starts from 0
-
-  CALL_BF(BF_GetBlock(header_info->fileDesc , blocks -1  , prev));   
+  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks)); 
+  CALL_BF(BF_GetBlock(header_info->fileDesc , blocks -1  , prev));   //Block enumeration starts from 0
   Record* prev_data = (Record*) BF_Block_GetData(prev);
 
+  //If we have reached the number of records the block can store or we are in the first one 
+  //that only stores the metadata, we allocate a new block , we store its pointer
+  //to the metadata part of the previous one (the formerly last) and we place the record in the new block.
 
   if( header_info->records == header_info->tot_records  || blocks == 1) {
 
@@ -102,12 +112,12 @@ int HP_InsertEntry(HP_info* header_info, Record record){
     void* addr = prev_data + header_info->tot_records;
     memcpy(addr , new , sizeof(BF_Block*));
 
-    //Put record in the new block
+    //Put record in the new block + fix stuct data
     Record* new_block= (Record*) BF_Block_GetData(new);
     new_block[0]=record;
     header_info->records = 1;  
 
-    //Take care of the block
+    //New block changed and now we are done with it 
     BF_Block_SetDirty(new); 
     CALL_BF(BF_UnpinBlock(new));      
     BF_Block_Destroy(&new);
@@ -120,6 +130,8 @@ int HP_InsertEntry(HP_info* header_info, Record record){
     header_info->records++;
   }
 
+  //Last block changed and now we are done with it .
+
   BF_Block_SetDirty(prev); 
   CALL_BF(BF_UnpinBlock(prev));  
 
@@ -131,19 +143,19 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
 
   BF_Block* cur;
   BF_Block_Init(&cur);
-  printf("okay");
   int blocks;
   CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
-  printf("\ncounting blocks %d\n", blocks);
 
-
+  //Total number of records in each block
   int records = header_info->tot_records;
 
   for(int i=0; i < blocks; i++) {
-    printf("\n%d",i);
 
     //Getting data from each block 
     CALL_BF(BF_GetBlock(header_info->fileDesc , i , cur));   
+
+    //If we are in the last block we might not have the max number of records it
+    //can typically store, so we access only the existing ones.
 
     if(i == blocks - 1) {
       records = header_info->records;
@@ -158,9 +170,11 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
       }
     } 
 
+    //We are done with the block, we don't need it in the buffer memory anymore , it can be replaced.
     CALL_BF(BF_UnpinBlock(cur));  
 
   }
+
 
   BF_Block_Destroy(&cur);
   return blocks;
