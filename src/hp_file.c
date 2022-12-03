@@ -27,10 +27,10 @@ int HP_CreateFile(char *fileName){
   // Create a block in the file and save in it some arbitrary metadata.
   
   int desc;
-  CALL_BF(BF_OpenFile(fileName,&desc)); 
+  CALL_BF(BF_OpenFile(fileName, &desc)); 
 
   CALL_BF(BF_AllocateBlock(desc, block)); 
-  char* before= BF_Block_GetData(block);
+  char* before = BF_Block_GetData(block);
   memcpy(before, "Heap", strlen("Heap")+1);  
 
   BF_Block_SetDirty(block); 
@@ -107,7 +107,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
 
     //Put record in the new block
     char* new_block= BF_Block_GetData(new);
-    memcpy(new_block , &record , sizeof(Record));
+    memcpy(new_block, &record, sizeof(Record));
     header_info->bytes = sizeof(Record);  
 
     //Take care of the block
