@@ -6,8 +6,10 @@
 
 /* Η δομή HP_info κρατάει μεταδεδομένα που σχετίζονται με το αρχείο σωρού*/
 typedef struct {
-    int fileDesc;   // Κωδικός αρχείου heap
-    int bytes;      // Πλήθος bytes στο τελευταίο Block μέχρι στιγμής
+
+    int fileDesc; //Κωδικός αρχείου heap
+    int records;  //Πλήθος records στο τελευταίο Block μέχρι στιγμής
+    int tot_records;  //Πλήθος records που χωράνε συνολικά στο block
 } HP_info;
 
 /*Η συνάρτηση HP_CreateFile χρησιμοποιείται για τη δημιουργία και
