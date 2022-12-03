@@ -17,27 +17,30 @@
 }
 
 int HP_CreateFile(char *fileName){
-
-  BF_Block* block;
-  BF_Block_Init(&block);
-
-  //Create the heap file
+  // Create file
   CALL_BF(BF_CreateFile(fileName));
 
-  // Create a block in the file and save in it some arbitrary metadata.
-  
+  // Open file
   int desc;
   CALL_BF(BF_OpenFile(fileName,&desc)); 
 
+  // Create a block in the file 
+  BF_Block* block;
+  BF_Block_Init(&block);
+
+  // Allocate memory
   CALL_BF(BF_AllocateBlock(desc, block)); 
-  char* before= BF_Block_GetData(block);
-  memcpy(before, "Heap", strlen("Heap")+1);  
+
+  char* before = BF_Block_GetData(block);     // Get data of the first block
+  memcpy(before, "Heap", strlen("Heap")+1);   // Save some arbitrary metadata in it
 
   BF_Block_SetDirty(block); 
   CALL_BF(BF_UnpinBlock(block));
 
+  // Close file
   BF_Block_Destroy(&block); 
   CALL_BF(BF_CloseFile(desc));
+
   return 0;
 }
 
