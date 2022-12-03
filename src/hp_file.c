@@ -83,44 +83,45 @@ int HP_CloseFile(HP_info* header_info ){
 //Στα μεταδεδομενα κραταμε που ακριβως θα γινει η εισαγωγη
 
 int HP_InsertEntry(HP_info* header_info, Record record){
-
   int bytes_left = BF_BLOCK_SIZE - header_info->bytes - sizeof(BF_Block*);
   int to_add = sizeof(record);
-  int blocks;
+
   BF_Block* prev;
   BF_Block_Init(&prev);
-  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
-//  printf("\n%d",blocks);
 
-  //Getting data from the last block 
-  CALL_BF(BF_GetBlock(header_info->fileDesc , blocks -1  , prev));   
+  int blocks;
+  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
+  //printf("Number of blocks: %d\n",blocks);
+
+  // Getting data from the last block 
+  CALL_BF(BF_GetBlock(header_info->fileDesc, blocks -1, prev));   
   char* prev_data = BF_Block_GetData(prev);
 
- //Block enumeration starts from 0
+  // Remeber!! Block enumeration starts from 0
 
+  // If there is not enough space to put the new record in
   if(to_add > bytes_left || blocks == 1) {
-
+    // Create a new block 
     BF_Block* new;
     BF_Block_Init(&new);
     CALL_BF(BF_AllocateBlock(header_info->fileDesc,new));
 
-    //Store pointer to new block as metadata
-    memcpy(prev_data + header_info->bytes , new , sizeof(BF_Block*));
+    // Store pointer to new block as metadata
+    memcpy(prev_data + header_info->bytes, new, sizeof(BF_Block*));
 
-    //Put record in the new block
-    char* new_block= BF_Block_GetData(new);
+    // Put record in the new block
+    char* new_block = BF_Block_GetData(new);
     memcpy(new_block , &record , sizeof(Record));
     header_info->bytes = sizeof(Record);  
 
-    //Take care of the block
+    // Take care of the block
     BF_Block_SetDirty(new); 
     CALL_BF(BF_UnpinBlock(new));      
     BF_Block_Destroy(&new);
   }
-
-  //We store the record in the last block
+  // If we do not need to create a new block
   else {
-
+    // Store the record in the last available block
     memcpy(prev_data + header_info->bytes , &record , sizeof(Record));    
     header_info->bytes+=sizeof(Record);
   }
