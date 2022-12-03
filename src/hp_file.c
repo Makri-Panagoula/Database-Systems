@@ -109,7 +109,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
     CALL_BF(BF_AllocateBlock(header_info->fileDesc,new));
 
     //Store pointer to new block as metadata
-    void* addr = prev_data + header_info->tot_records;
+    void* addr = prev_data + header_info->tot_records;   //Estimating memory address with the offset
     memcpy(addr , new , sizeof(BF_Block*));
 
     //Put record in the new block + fix stuct data
