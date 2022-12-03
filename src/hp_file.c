@@ -27,10 +27,10 @@ int HP_CreateFile(char *fileName){
   // Create a block in the file and save in it some arbitrary metadata.
   
   int desc;
-  CALL_BF(BF_OpenFile(fileName, &desc)); 
+  CALL_BF(BF_OpenFile(fileName,&desc)); 
 
   CALL_BF(BF_AllocateBlock(desc, block)); 
-  char* before = BF_Block_GetData(block);
+  char* before= BF_Block_GetData(block);
   memcpy(before, "Heap", strlen("Heap")+1);  
 
   BF_Block_SetDirty(block); 
@@ -89,6 +89,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
   BF_Block* prev;
   BF_Block_Init(&prev);
   CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
+//  printf("\n%d",blocks);
 
   //Getting data from the last block 
   CALL_BF(BF_GetBlock(header_info->fileDesc , blocks -1  , prev));   
@@ -100,14 +101,14 @@ int HP_InsertEntry(HP_info* header_info, Record record){
 
     BF_Block* new;
     BF_Block_Init(&new);
-    BF_AllocateBlock(header_info->fileDesc,new);
+    CALL_BF(BF_AllocateBlock(header_info->fileDesc,new));
 
     //Store pointer to new block as metadata
     memcpy(prev_data + header_info->bytes , new , sizeof(BF_Block*));
 
     //Put record in the new block
     char* new_block= BF_Block_GetData(new);
-    memcpy(new_block, &record, sizeof(Record));
+    memcpy(new_block , &record , sizeof(Record));
     header_info->bytes = sizeof(Record);  
 
     //Take care of the block
@@ -134,14 +135,23 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
 
   BF_Block* cur;
   BF_Block_Init(&cur);
+  printf("\ninitialization done\n");
   int blocks;
   CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks));
+  printf("\ncounting blocks %d\n", blocks);
+
   int records_per_block = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
 
-  for(int i=0; i < blocks - 1; i++) {
+  if(blocks > BF_BUFFER_SIZE) {
+    blocks = BF_BUFFER_SIZE;
+  }
+
+  for(int i=0; i < blocks; i++) {
 
     //Getting data from each block 
     CALL_BF(BF_GetBlock(header_info->fileDesc , i , cur));   
+    printf("\n%d",i);
+  
     char* cur_data = BF_Block_GetData(cur);   
 
     for(int j=0; j < records_per_block; j++) {        //For each record inside the block
@@ -154,6 +164,7 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
     } 
   }
 
+//  CALL_BF(BF_UnpinBlock(cur));  
   BF_Block_Destroy(&cur);
   return blocks;
 }
