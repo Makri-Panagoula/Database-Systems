@@ -34,14 +34,14 @@ int main() {
     record = randomRecord();
     int code = HP_InsertEntry(info, record);
     if(code == -1) {
-      printf("Insert Entry: Not okay");
+      printf("Insert Entry: Not okay\n");
     }
   }
 
-  // printf("RUN PrintAllEntries\n");
-  // int id = rand() % RECORDS_NUM;
-  // printf("\nSearching for: %d",id);
-  // HP_GetAllEntries(info, id);
+  printf("RUN PrintAllEntries\n");
+  int id = rand() % RECORDS_NUM;
+  printf("Searching for entry with id: %d\n",id);
+  HP_GetAllEntries(info, id);
 
   HP_CloseFile(info);
   BF_Close();

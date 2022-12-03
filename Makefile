@@ -23,12 +23,16 @@ bf:
 
 
 runhp:
-	@echo "Runing hp..."
-	./build/hp_main
+	@echo "Runing hp:"
+	$(BUILD)hp_main
 
 runbf:
-	@echo "Running bf.../"
-	./build/bf_main
+	@echo "Running bf:"
+	$(BUILD)bf_main
+
+runht:
+	@echo "Running ht:"
+	$(BUILD)ht_main
 
 
 # Clean

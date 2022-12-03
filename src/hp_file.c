@@ -72,7 +72,7 @@ HP_info* HP_OpenFile(char *fileName){
   info->tot_records = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
   
   // Done with the block
-  BF_UnpinBlock(metadata)
+  BF_UnpinBlock(metadata);
   BF_Block_Destroy(&metadata);
 
   return info;
@@ -87,6 +87,8 @@ int HP_CloseFile(HP_info* header_info ){
 
 
 int HP_InsertEntry(HP_info* header_info, Record record){
+  int blocks;
+  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks)); 
 
   // Get data from the last block 
   BF_Block* prev;
@@ -95,9 +97,6 @@ int HP_InsertEntry(HP_info* header_info, Record record){
   CALL_BF(BF_GetBlock(header_info->fileDesc, blocks - 1, prev));   // Remember!! Block enumeration starts from 0
   Record* prev_data = (Record*) BF_Block_GetData(prev);
 
-  int blocks;
-  CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks)); 
-  
   // If we have reached the number of records the block can store or we are in the first one 
   // that only stores the metadata, we allocate a new block, we store its pointer
   // to the metadata part of the previous one (the formerly last) and we place the record in a new block.
