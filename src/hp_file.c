@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "bf.h"
 #include "hp_file.h"
+
 #define MAX_OPEN_FILES 20
 #define HP_ERROR -1;
 
@@ -32,12 +32,24 @@ int HP_CreateFile(char *fileName){
   // identifying it as a heap file
   CALL_BF(BF_AllocateBlock(desc, block)); 
   char* before = BF_Block_GetData(block);
-  memcpy(before, "Heap", strlen("Heap")+1);  
+
+  // Allocate memory address for the pointer 
+  HP_info* info = malloc(sizeof(HP_info));
+
+  // Initializing HP_INFO fields
+  info->fileDesc = desc;
+  info->records = 0;    // The first block holds only the metadata
+
+  // The available bytes for records per block will be its total size minus the pointer part (its metadata)
+  // The number of records per block will be the available bytes divided by the size of each record (records have a fixed size)
+  info->tot_records = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
+  info->heap = "Heap";
+
+  memcpy(before, info, sizeof(HP_info));  
 
  // We have changed the content of the block, so we set it dirty to be recopied in hard disk
- // We unpin, since we are done with current block and its space can be replaced
+ // We don't unpin, we want to keep the first block with the metadata in the heap.
   BF_Block_SetDirty(block); 
-  CALL_BF(BF_UnpinBlock(block));
 
   BF_Block_Destroy(&block);       // Take care of initialized block
   CALL_BF(BF_CloseFile(desc));
@@ -54,23 +66,12 @@ HP_info* HP_OpenFile(char *fileName){
 
   // Get data from first block
   BF_GetBlock(desc, 0, metadata); 
-  char* heap = (char*)BF_Block_GetData(metadata);
+  HP_info* info = (HP_info*)BF_Block_GetData(metadata);
 
   // If the key holds an unexpected value, then this is not a heap file
-  if(strcmp(heap,"Heap") != 0)
+  if( info == NULL || strcmp(info->heap,"Heap") != 0)
     return NULL;  
 
-  // Allocate memory address for the pointer 
-  HP_info* info = malloc(sizeof(HP_info));
-
-  // Initializing HP_INFO fields
-  info->fileDesc = desc;
-  info->records = 0;    // The first block holds only the metadata
-
-  // The available bytes for records per block will be its total size minus the pointer part (its metadata)
-  // The number of records per block will be the available bytes divided by the size of each record (records have a fixed size)
-  info->tot_records = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
-  
   // Done with the block
   BF_UnpinBlock(metadata);
   BF_Block_Destroy(&metadata);
@@ -81,6 +82,13 @@ HP_info* HP_OpenFile(char *fileName){
 
 int HP_CloseFile(HP_info* header_info ){
   // Close file with the identical fileDesc
+  BF_Block* metadata;
+  BF_Block_Init(&metadata);
+  BF_GetBlock(header_info->fileDesc, 0, metadata);   
+
+  CALL_BF(BF_UnpinBlock(metadata));
+  BF_Block_Destroy(&metadata);
+
   CALL_BF(BF_CloseFile(header_info->fileDesc));
   return 0;
 }
@@ -168,8 +176,9 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
       }
     } 
 
-    // Done with the block, we don't need it in the buffer memory anymore, it can be replaced.
-    CALL_BF(BF_UnpinBlock(cur));  
+    // Done with the block, we don't need it in the buffer memory anymore, it can be replaced unless it's the first one.
+    if(i!=0)
+      CALL_BF(BF_UnpinBlock(cur));  
   }
 
   BF_Block_Destroy(&cur);
