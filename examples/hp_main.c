@@ -31,17 +31,18 @@ int main() {
   int r;
   printf("Insert Entries\n");
   for (int id = 0; id < RECORDS_NUM; ++id) {
+    printf("Id: %d\n", id);
     record = randomRecord();
-    int code = HP_InsertEntry(info, record);
+    int code = HP_InsertEntry(info, record);;
     if(code == -1) {
       printf("Insert Entry: Not okay\n");
     }
   }
 
-  printf("RUN PrintAllEntries\n");
-  int id = rand() % RECORDS_NUM;
-  printf("Searching for entry with id: %d\n",id);
-  HP_GetAllEntries(info, id);
+  // printf("RUN PrintAllEntries\n");
+  // int id = rand() % RECORDS_NUM;
+  // printf("Searching for entry with id: %d\n",id);
+  // HP_GetAllEntries(info, id);
 
   HP_CloseFile(info);
   BF_Close();

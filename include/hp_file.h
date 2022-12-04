@@ -10,6 +10,7 @@ typedef struct {
     int fileDesc; //Κωδικός αρχείου heap
     int records;  //Πλήθος records στο τελευταίο Block μέχρι στιγμής
     int tot_records;  //Πλήθος records που χωράνε συνολικά στο block
+    char* heap;
 } HP_info;
 
 /*Η συνάρτηση HP_CreateFile χρησιμοποιείται για τη δημιουργία και

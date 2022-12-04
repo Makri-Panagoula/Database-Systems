@@ -52,7 +52,6 @@ int HP_CreateFile(char *fileName){
   BF_Block_SetDirty(block); 
 
   BF_Block_Destroy(&block);       // Take care of initialized block
-  CALL_BF(BF_CloseFile(desc));
   return 0;
 }
 
@@ -79,7 +78,7 @@ HP_info* HP_OpenFile(char *fileName){
   return info;
 }
 
-
+// We keep the first block pinned until we close the file
 int HP_CloseFile(HP_info* header_info ){
   // Close file with the identical fileDesc
   BF_Block* metadata;
@@ -113,11 +112,17 @@ int HP_InsertEntry(HP_info* header_info, Record record){
 
     BF_Block* new;
     BF_Block_Init(&new);
-    CALL_BF(BF_AllocateBlock(header_info->fileDesc,new));
+    CALL_BF(BF_AllocateBlock(header_info->fileDesc, new));
+    printf("After allocation\n");
 
     // Store pointer to new block as metadata
-    void* addr = prev_data + header_info->tot_records;   // Find memory address with offset
-    memcpy(addr, new, sizeof(BF_Block*));
+    void* addr;
+    // The first block does not contain a pointer to the next block, only metadata of the heap file
+    if(blocks != 1){   
+      addr = prev_data + header_info->tot_records;   // Find memory address with offset
+      memcpy(addr, new, sizeof(BF_Block*));
+    }
+    printf("After if statement\n");
 
     // Put record in the new block + fix struct data
     Record* new_block = (Record*)BF_Block_GetData(new);
