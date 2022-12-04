@@ -71,8 +71,7 @@ HP_info* HP_OpenFile(char *fileName){
   if( info == NULL || strcmp(info->heap,"Heap") != 0)
     return NULL;  
 
-  // Done with the block
-  BF_UnpinBlock(metadata);
+  // Done with the block.Don't unpin!
   BF_Block_Destroy(&metadata);
 
   return info;

@@ -22,19 +22,20 @@ int main() {
 
   HT_CreateFile(FILE_NAME,10);
   HT_info* info = HT_OpenFile(FILE_NAME);
+  printf("%p",info);
 
-  Record record;
-  srand(12569874);
-  int r;
-  printf("Insert Entries\n");
-  for (int id = 0; id < RECORDS_NUM; ++id) {
-    record = randomRecord();
-    HT_InsertEntry(info, record);
-  }
+  // Record record;
+  // srand(12569874);
+  // int r;
+  // printf("Insert Entries\n");
+  // for (int id = 0; id < RECORDS_NUM; ++id) {
+  //   record = randomRecord();
+  //   HT_InsertEntry(info, record);
+  // }
 
-  printf("RUN PrintAllEntries\n");
-  int id = rand() % RECORDS_NUM;
-  HT_GetAllEntries(info, &id);
+  // printf("RUN PrintAllEntries\n");
+  // int id = rand() % RECORDS_NUM;
+  // HT_GetAllEntries(info, &id);
 
   HT_CloseFile(info);
   BF_Close();

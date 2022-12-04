@@ -1,16 +1,20 @@
 #ifndef HT_TABLE_H
 #define HT_TABLE_H
 #include <record.h>
-
-
+#define MAX_BUCKETS 20
 
 
 typedef struct {
-    // Να το συμπληρώσετε
+
+    int fileDesc;
+    int buckets;
+    char* hash;             //Identifier for hash table
+    //Tells us which is the last block that corresponds to the bucket with number index.
+    int hash_block[MAX_BUCKETS];            
 } HT_info;
 
 typedef struct {
-    // Να το συμπληρώσετε
+
 } HT_block_info;
 
 /*Η συνάρτηση HT_CreateFile χρησιμοποιείται για τη δημιουργία
