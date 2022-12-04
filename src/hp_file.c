@@ -125,7 +125,7 @@ int HP_InsertEntry(HP_info* header_info, Record record){
   // Store the record in the last block
   else {
 
-    prev_data[header_info->records]=record;
+    prev_data[header_info->records] = record;
     header_info->records++;
   }
 
@@ -148,7 +148,7 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
   // Total number of records in each block
   int records = header_info->tot_records;
 
-  for(int i=0; i < blocks; i++) {
+  for(int i = 0; i < blocks; i++) {
 
     // Get data from each block 
     CALL_BF(BF_GetBlock(header_info->fileDesc , i , cur));   
@@ -162,7 +162,7 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
   
     Record* data = (Record*)BF_Block_GetData(cur);   
 
-    for(int j=0; j < records ; j++) {        // For each record inside the block
+    for(int j = 0; j < records; j++) {        // For each record inside the block
       if(data[j].id == id) {
         printRecord(data[j]);
       }
