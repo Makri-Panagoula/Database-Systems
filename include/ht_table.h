@@ -8,15 +8,15 @@ typedef struct {
 
     int fileDesc;
     int buckets;
-    char* hash;             //Identifier for hash table
-    //Tells us which is the last block that corresponds to the bucket with number index.
+    char* hash;             // Identifier for hash table
+    // Tells us which is the last block that corresponds to the bucket with number index.
     int hash_block[MAX_BUCKETS];            
 } HT_info;
 
 typedef struct {
 
-    int records;   //Number of records in current block
-    BF_Block* overflow_block;  //Pointer to overflow block
+    int records;   // Number of records in current block
+    BF_Block* overflow_block;  // Pointer to overflow block
 
 } HT_block_info;
 
@@ -60,7 +60,9 @@ int HT_InsertEntry(HT_info* header_info, /*επικεφαλίδα του αρχ�
 στο αρχείο κατακερματισμού οι οποίες έχουν τιμή στο πεδίο-κλειδί ίση με value.
 Η πρώτη δομή δίνει πληροφορία για το αρχείο κατακερματισμού, όπως αυτή είχε επιστραφεί
 από την HT_OpenIndex. Για κάθε εγγραφή που υπάρχει στο αρχείο και έχει τιμή στο πεδίο-κλειδί
-(όπως αυτό ορίζεται στην HT_info) ίση με value, εκτυπώνονται τα περιεχόμενά της (συμπεριλαμβανομένου και του πεδίου-κλειδιού). Να επιστρέφεται επίσης το πλήθος των blocks που διαβάστηκαν μέχρι να βρεθούν όλες οι εγγραφές. Σε περίπτωση επιτυχίας επιστρέφει το πλήθος των blocks που διαβάστηκαν, ενώ σε περίπτωση λάθους επιστρέφει -1.*/
+(όπως αυτό ορίζεται στην HT_info) ίση με value, εκτυπώνονται τα περιεχόμενά της (συμπεριλαμβανομένου και του πεδίου-κλειδιού). 
+Να επιστρέφεται επίσης το πλήθος των blocks που διαβάστηκαν μέχρι να βρεθούν όλες οι εγγραφές. 
+Σε περίπτωση επιτυχίας επιστρέφει το πλήθος των blocks που διαβάστηκαν, ενώ σε περίπτωση λάθους επιστρέφει -1.*/
 int HT_GetAllEntries(HT_info* header_info, /*επικεφαλίδα του αρχείου*/
 	void *value /*τιμή του πεδίου-κλειδιού προς αναζήτηση*/);
 

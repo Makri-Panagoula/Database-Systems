@@ -19,6 +19,18 @@ int hash_function(int id , int buckets) {
   return id % buckets; 
 }
 
+void create_metadata(BF_Block* block, int number_of_records, BF_Block* previous_block){
+    Record* new_block = (Record*)BF_Block_GetData(block);  
+    HT_block_info metadata;
+
+    int tot_records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
+    void* addr_new = new_block + tot_records;
+    HT_block_info* addr_info = (HT_block_info*) addr_new;
+
+    metadata.records = number_of_records;
+    metadata.overflow_block = previous_block;
+    memcpy(addr_info, &metadata, sizeof(HT_block_info));
+}
 
 int HT_CreateFile(char *fileName,  int buckets){
 
@@ -43,16 +55,21 @@ int HT_CreateFile(char *fileName,  int buckets){
   // Initializing HT_INFO fields
   info->fileDesc = desc;
   info->buckets = buckets;    
-  info->hash="HashTable";
+  info->hash = "HashTable";
 
-  //We initially place the register that hashes to i inti the i-th block 
-  for(int i=0; i<buckets; i++)
-    info->hash_block[i]=i;
+  // We initially place the register that hashes to i inti the i-th block 
+  for(int i = 0; i < buckets; i++){
+    info->hash_block[i] = i + 1;
+    CALL_OR_DIE(BF_AllocateBlock(desc, block));
+    create_metadata(block, 0, NULL);
+    BF_Block_SetDirty(block);
+    CALL_OR_DIE(BF_UnpinBlock(block));
+  }
 
   memcpy(before, info, sizeof(HT_info));  
 
- // We have changed the content of the block, so we set it dirty to be recopied in hard disk
- // We don't unpin, we want to keep the first block with the metadata in the heap.
+  // We have changed the content of the block, so we set it dirty to be recopied in hard disk
+  // We don't unpin, we want to keep the first block with the metadata in the heap.
   BF_Block_SetDirty(block); 
 
   BF_Block_Destroy(&block);       // Take care of initialized block
@@ -106,40 +123,37 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
   BF_Block_Init(&prev);
 
   CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, prev));   
-  Record* prev_data = (Record*) BF_Block_GetData(prev);       //SUS!
+  Record* prev_data = (Record*) BF_Block_GetData(prev);       // SUS!
 
   // The available bytes for records per block will be its total size minus the pointer part (its metadata)
   // The number of records per block will be the available bytes divided by the size of each record (records have a fixed size)
-
   int tot_records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
 
-  //Get metadata of the latest block
+  // Get metadata of the latest block
   void* addr = prev_data + tot_records;
-  HT_block_info* info = (HT_block_info*) addr;
+  HT_block_info* info = (HT_block_info*)addr;
 
   // If we have reached the number of records the block can store or we are in the first one 
   // that only stores the metadata, we allocate a new block, we store its pointer
   // to the metadata part of the previous one (the formerly last) and we place the record in a new block.
 
-  if( info->records == tot_records || blocks == 1) {
+  int last_block;
+  CALL_OR_DIE(BF_GetBlockCounter(ht_info->fileDesc, &last_block));
+
+  if( info->records == tot_records || last_block == 1) {
 
     BF_Block* new;
     BF_Block_Init(&new);
     CALL_OR_DIE(BF_AllocateBlock(ht_info->fileDesc, new));
 
-    //Update metadata of the hash table
-    int last_block;
-    CALL_OR_DIE(BF_GetBlockCounter(ht_info->fileDesc, &last_block));     
-    ht_info->hash_block[bucket] = last_block ;
+    //Update metadata of the hash table     
+    ht_info->hash_block[bucket] = last_block;
 
     // Put record in the new block + fix struct data
     Record* new_block = (Record*)BF_Block_GetData(new);
     new_block[0] = record;
-    HT_block_info metadata;
-    void* addr_new= new_block + tot_records;
-    HT_block_info* addr_info = (HT_block_info*) addr_new;
-    metadata.records = 1;
-    memcpy(addr_info , &metadata ,sizeof(HT_block_info));
+
+    create_metadata(new, 1, prev);
 
     // New block changed and now we are done with it 
     BF_Block_SetDirty(new); 
@@ -149,31 +163,73 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
     // Store pointer to new block as metadata
     void* addr;
     // The first block does not contain a pointer to the next block, only metadata of the heap file
-    if(blocks != 1){   
+    if(last_block != 1){   
       info->overflow_block = new;
     }
     else {
       // We keep the first block pinned until we close the file
       BF_Block_Destroy(&prev);
-      return 0;
+      return ht_info->hash_block[bucket];
     }
   }
   // Store the record in the last block
   else {
-
     prev_data[info->records] = record;
     info->records++;
   }
-
   // Last block changed and now we are done with it 
   BF_Block_SetDirty(prev); 
   CALL_OR_DIE(BF_UnpinBlock(prev));  
   BF_Block_Destroy(&prev);
 
-  return 0;
+  return ht_info->hash_block[bucket];
 }
+
+
 int HT_GetAllEntries(HT_info* ht_info, void *value ){
-    return 0;
+  BF_Block* cur;
+  BF_Block_Init(&cur);
+
+  int blocks;
+  CALL_BF(BF_GetBlockCounter(ht_info->fileDesc, &blocks));
+
+  // Total number of records in each block
+  int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
+
+  for(int i = 0; i < blocks; i++) {
+
+    // Get data from each block 
+    CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, i, cur));   
+    Record* prev_data = (Record*)BF_Block_GetData(cur);  
+
+    //Get metadata of the latest block
+    void* addr = prev_data + tot_records;
+    HT_block_info* info = (HT_block_info*) addr;  
+
+    // If we are in the last block it might not have the max number of records it
+    // can store, so we access only the existing ones
+
+    if(i == blocks - 1) {
+      records = info->records;
+    }
+  
+    Record* data = (Record*)BF_Block_GetData(cur);   
+
+    for(int j = 0; j < records; j++) {        // For each record inside the block
+      
+      if(data[j].id == id) {
+        printRecord(data[j]);
+      }
+    } 
+
+    // Done with the block, we don't need it in the buffer memory anymore, it can be replaced unless it's the first one.
+    if(i!=0)
+      CALL_OR_DIE(BF_UnpinBlock(cur));  
+  }
+
+  BF_Block_Destroy(&cur);
+  
+  return blocks;
 }
 
 

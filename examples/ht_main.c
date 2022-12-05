@@ -29,13 +29,14 @@ int main() {
   int r;
   printf("Insert Entries\n");
   for (int id = 0; id < RECORDS_NUM; ++id) {
+    printf("Record id: %d\n", id);
     record = randomRecord();
     HT_InsertEntry(info, record);
   }
 
-  // printf("RUN PrintAllEntries\n");
-  // int id = rand() % RECORDS_NUM;
-  // HT_GetAllEntries(info, &id);
+  printf("RUN PrintAllEntries\n");
+  int id = rand() % RECORDS_NUM;
+  HT_GetAllEntries(info, &id);
 
   HT_CloseFile(info);
   BF_Close();
