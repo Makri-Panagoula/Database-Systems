@@ -15,6 +15,9 @@ typedef struct {
 
 typedef struct {
 
+    int records;   //Number of records in current block
+    BF_Block* overflow_block;  //Pointer to overflow block
+
 } HT_block_info;
 
 /*Η συνάρτηση HT_CreateFile χρησιμοποιείται για τη δημιουργία
