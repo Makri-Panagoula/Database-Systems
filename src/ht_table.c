@@ -59,11 +59,13 @@ int HT_CreateFile(char *fileName,  int buckets){
 
   // We initially place the register that hashes to i inti the i-th block 
   for(int i = 0; i < buckets; i++){
+
     info->hash_block[i] = i + 1;
     CALL_OR_DIE(BF_AllocateBlock(desc, block));
     create_metadata(block, 0, NULL);
     BF_Block_SetDirty(block);
     CALL_OR_DIE(BF_UnpinBlock(block));
+    
   }
 
   memcpy(before, info, sizeof(HT_info));  
@@ -121,7 +123,6 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
   // Get data from that block 
   BF_Block* prev;
   BF_Block_Init(&prev);
-
   CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, prev));   
   Record* prev_data = (Record*) BF_Block_GetData(prev);       // SUS!
 
@@ -129,16 +130,17 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
   // The number of records per block will be the available bytes divided by the size of each record (records have a fixed size)
   int tot_records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
 
-  // Get metadata of the latest block
+  // Get metadata of that block
   void* addr = prev_data + tot_records;
   HT_block_info* info = (HT_block_info*)addr;
 
-  // If we have reached the number of records the block can store or we are in the first one 
-  // that only stores the metadata, we allocate a new block, we store its pointer
-  // to the metadata part of the previous one (the formerly last) and we place the record in a new block.
-
+  //Counts how many blocks totally exist in hash table.
   int last_block;
   CALL_OR_DIE(BF_GetBlockCounter(ht_info->fileDesc, &last_block));
+
+  // If we have reached the number of records the block can store or we are in the first one 
+  // that only stores the metadata, we allocate a new block, we store in its metadata part
+  // the pointer to the previous one and we save the record in the new one.
 
   if( info->records == tot_records || last_block == 1) {
 
@@ -160,23 +162,18 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
     CALL_OR_DIE(BF_UnpinBlock(new));      
     BF_Block_Destroy(&new);
 
-    // Store pointer to new block as metadata
-    void* addr;
-    // The first block does not contain a pointer to the next block, only metadata of the heap file
-    if(last_block != 1){   
-      info->overflow_block = new;
-    }
-    else {
+    if(last_block == 1) {
       // We keep the first block pinned until we close the file
       BF_Block_Destroy(&prev);
       return ht_info->hash_block[bucket];
     }
   }
-  // Store the record in the last block
+  // Store the record in the previous, already existent block
   else {
     prev_data[info->records] = record;
     info->records++;
   }
+
   // Last block changed and now we are done with it 
   BF_Block_SetDirty(prev); 
   CALL_OR_DIE(BF_UnpinBlock(prev));  
@@ -186,51 +183,51 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
 }
 
 
-int HT_GetAllEntries(HT_info* ht_info, void *value ){
-  BF_Block* cur;
-  BF_Block_Init(&cur);
+// int HT_GetAllEntries(HT_info* ht_info, void *value ){
+//   BF_Block* cur;
+//   BF_Block_Init(&cur);
 
-  int blocks;
-  CALL_BF(BF_GetBlockCounter(ht_info->fileDesc, &blocks));
+//   int blocks;
+//   CALL_BF(BF_GetBlockCounter(ht_info->fileDesc, &blocks));
 
-  // Total number of records in each block
-  int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
+//   // Total number of records in each block
+//   int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
 
-  for(int i = 0; i < blocks; i++) {
+//   for(int i = 0; i < blocks; i++) {
 
-    // Get data from each block 
-    CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, i, cur));   
-    Record* prev_data = (Record*)BF_Block_GetData(cur);  
+//     // Get data from each block 
+//     CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, i, cur));   
+//     Record* prev_data = (Record*)BF_Block_GetData(cur);  
 
-    //Get metadata of the latest block
-    void* addr = prev_data + tot_records;
-    HT_block_info* info = (HT_block_info*) addr;  
+//     //Get metadata of the latest block
+//     void* addr = prev_data + tot_records;
+//     HT_block_info* info = (HT_block_info*) addr;  
 
-    // If we are in the last block it might not have the max number of records it
-    // can store, so we access only the existing ones
+//     // If we are in the last block it might not have the max number of records it
+//     // can store, so we access only the existing ones
 
-    if(i == blocks - 1) {
-      records = info->records;
-    }
+//     if(i == blocks - 1) {
+//       records = info->records;
+//     }
   
-    Record* data = (Record*)BF_Block_GetData(cur);   
+//     Record* data = (Record*)BF_Block_GetData(cur);   
 
-    for(int j = 0; j < records; j++) {        // For each record inside the block
+//     for(int j = 0; j < records; j++) {        // For each record inside the block
       
-      if(data[j].id == id) {
-        printRecord(data[j]);
-      }
-    } 
+//       if(data[j].id == id) {
+//         printRecord(data[j]);
+//       }
+//     } 
 
-    // Done with the block, we don't need it in the buffer memory anymore, it can be replaced unless it's the first one.
-    if(i!=0)
-      CALL_OR_DIE(BF_UnpinBlock(cur));  
-  }
+//     // Done with the block, we don't need it in the buffer memory anymore, it can be replaced unless it's the first one.
+//     if(i!=0)
+//       CALL_OR_DIE(BF_UnpinBlock(cur));  
+//   }
 
-  BF_Block_Destroy(&cur);
+//   BF_Block_Destroy(&cur);
   
-  return blocks;
-}
+//   return blocks;
+// }
 
 
 
