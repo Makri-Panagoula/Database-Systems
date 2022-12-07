@@ -17,7 +17,7 @@ bf:
 	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/bf_main.c ./src/record.c -lbf -o $(BUILD)bf_main -O2;
 
 ht:
-	@echo " Compile hp_main ...";
+	@echo " Compile ht_main ...";
 	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/ht_main.c ./src/record.c ./src/ht_table.c -lbf -o $(BUILD)ht_main -O2
 
 

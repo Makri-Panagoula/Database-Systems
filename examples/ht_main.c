@@ -35,8 +35,8 @@ int main() {
   }
 
   printf("RUN PrintAllEntries\n");
-  // int id = rand() % RECORDS_NUM;
-  // HT_GetAllEntries(info, &id);
+  int id = rand() % RECORDS_NUM;
+  HT_GetAllEntries(info, &id);
 
   HT_CloseFile(info);
   BF_Close();
