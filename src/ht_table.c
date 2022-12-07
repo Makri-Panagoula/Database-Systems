@@ -185,17 +185,21 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
 
 
 int HT_GetAllEntries(HT_info* ht_info, void *value ){
-  int id = *(int*)value;
+
+  int id = * (int*) value;
 
   // Finding the latest block of the bucket
   int bucket = hash_function(id, ht_info->buckets);
   int blocks = ht_info->hash_block[bucket];
-
+  int counter = 0;      //Count how many blocks we will access.
   BF_Block* cur;
   BF_Block_Init(&cur);
 
+  //Get data from the latest block of the bucket
   CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, cur));
-  Record* cur_data = (Record*)BF_Block_GetData(cur);
+
+  //Records array
+  Record* cur_data = (Record*)BF_Block_GetData(cur);    
 
   // Total number of records in each block
   int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
@@ -204,8 +208,11 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
   void* addr = cur_data + records;
   HT_block_info* info = (HT_block_info*)addr;
 
+
+  //Traceback to the first block of the bucket
   while(info->overflow_block != NULL){
 
+    //Check every record of the block
     for(int i = 0; i < records; i++){
 
       if(cur_data[i].id == id)
@@ -219,11 +226,12 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
     // Get metadata of that block
     addr = cur_data + records;
     info = (HT_block_info*)addr;
+    counter++;
   }
 
   BF_Block_Destroy(&cur);
   
-  return blocks;
+  return counter;
 }
 
 
