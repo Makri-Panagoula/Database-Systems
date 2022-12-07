@@ -19,7 +19,8 @@ int hash_function(int id , int buckets) {
   return id % buckets; 
 }
 
-void create_metadata(BF_Block* block, int number_of_records, BF_Block* previous_block){
+//Initializes HP_block_info fields with number of records and previous_block  
+void create_metadata(BF_Block* block, int number_of_records, int previous_block){
 
     Record* data = (Record*)BF_Block_GetData(block);  
 
@@ -51,25 +52,28 @@ int HT_CreateFile(char *fileName,  int buckets){
   char* before = BF_Block_GetData(block);
 
   // Allocate memory address for the pointer 
-  HT_info* info = malloc(sizeof(HT_info));
+  HT_info info;
 
   // Initializing HT_INFO fields
-  info->fileDesc = desc;
-  info->buckets = buckets;    
-  info->hash = "HashTable";
+  info.fileDesc = desc;
+  info.buckets = buckets;    
+  info.hash = "HashTable";
 
   // We initially place the register that hashes to i inti the i-th block 
   for(int i = 0; i < buckets; i++){
 
-    info->hash_block[i] = i + 1;
+    //We use the first block for metadata of the file so it can't be put in a bucket.
+    //Now every bucket has an initial block in consecutive order
+    info.hash_block[i] = i + 1;
     CALL_OR_DIE(BF_AllocateBlock(desc, block));
-    create_metadata(block, 0, NULL);
+
+    create_metadata(block, 0, -1);
+
     BF_Block_SetDirty(block);
-    CALL_OR_DIE(BF_UnpinBlock(block));
-    
+    CALL_OR_DIE(BF_UnpinBlock(block));    
   }
 
-  memcpy(before, info, sizeof(HT_info));  
+  memcpy(before, &info, sizeof(HT_info));  
 
   // We have changed the content of the block, so we set it dirty to be recopied in hard disk
   // We don't unpin, we want to keep the first block with the metadata in the heap.
@@ -95,10 +99,14 @@ HT_info* HT_OpenFile(char *fileName){
   if( info == NULL || strcmp(info->hash,"HashTable") != 0)
     return NULL;  
 
+  //Initialize the pointer with the struct values.
+  HT_info* to_return = malloc(sizeof(HT_info));
+  memcpy(to_return , info , sizeof(HT_info));
+
   // Done with the block.Don't unpin!
   BF_Block_Destroy(&metadata);
 
-  return info;  
+  return to_return;  
 }
 
 
@@ -118,8 +126,8 @@ int HT_CloseFile( HT_info* HT_info ){
 
 int HT_InsertEntry(HT_info* ht_info, Record record){
 
-  //Finding the latest block of the bucket
   int bucket = hash_function(record.id, ht_info->buckets);
+  //The last block of the bucket
   int blocks = ht_info->hash_block[bucket];
 
   // Get data from that block 
@@ -157,7 +165,7 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
     Record* new_block = (Record*)BF_Block_GetData(new);
     new_block[0] = record;
 
-    create_metadata(new, 1, prev);
+    create_metadata(new, 1, blocks);
 
     // New block changed and now we are done with it 
     BF_Block_SetDirty(new); 
@@ -211,7 +219,7 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
 
 
   //Traceback to the first block of the bucket
-  while(info->overflow_block != NULL){
+  while(info->overflow_block != -1){
 
     //Check every record of the block
     for(int i = 0; i < records; i++){
@@ -220,13 +228,18 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
         printRecord(cur_data[i]);
     }
 
+    //We are done with this one
     CALL_OR_DIE(BF_UnpinBlock(cur));  
-    cur = info->overflow_block;
+
+    //Access the previous block of the bucket
+    blocks = info->overflow_block;
+    CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, cur));
     cur_data = (Record*)BF_Block_GetData(cur);
 
     // Get metadata of that block
     addr = cur_data + records;
     info = (HT_block_info*)addr;
+    //Update counter
     counter++;
   }
 

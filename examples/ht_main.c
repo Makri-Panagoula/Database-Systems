@@ -22,7 +22,7 @@ int main() {
 
   HT_CreateFile(FILE_NAME,10);
   HT_info* info = HT_OpenFile(FILE_NAME);
-  printf("%p",info);
+  printf("\n%p\n",info);
 
   Record record;
   srand(12569874);

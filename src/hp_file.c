@@ -34,18 +34,19 @@ int HP_CreateFile(char *fileName){
   char* before = BF_Block_GetData(block);
 
   // Allocate memory address for the pointer 
-  HP_info* info = malloc(sizeof(HP_info));
+  HP_info info ;
 
   // Initializing HP_INFO fields
-  info->fileDesc = desc;
-  info->records = 0;    // The first block holds only the metadata
+  info.fileDesc = desc;
+  info.records = 0;    // The first block holds only the metadata
 
   // The available bytes for records per block will be its total size minus the pointer part (its metadata)
   // The number of records per block will be the available bytes divided by the size of each record (records have a fixed size)
-  info->tot_records = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
-  info->heap = "Heap";
+  info.tot_records = (BF_BLOCK_SIZE - sizeof(BF_Block*)) / sizeof(Record);
+  info.heap = "Heap";
 
-  memcpy(before, info, sizeof(HP_info));  
+  //Copy the struct in the memory
+  memcpy(before, &info, sizeof(HP_info));  
 
  // We have changed the content of the block, so we set it dirty to be recopied in hard disk
  // We don't unpin, we want to keep the first block with the metadata in the heap.
@@ -71,14 +72,19 @@ HP_info* HP_OpenFile(char *fileName){
   if( info == NULL || strcmp(info->heap,"Heap") != 0)
     return NULL;  
 
+  //Initialize the pointer with the struct values.
+  HP_info* to_return = malloc(sizeof(HP_info));
+  memcpy(to_return , info , sizeof(HP_info));
+
   // Done with the block.Don't unpin!
   BF_Block_Destroy(&metadata);
 
-  return info;
+  return to_return;
 }
 
 // We keep the first block pinned until we close the file
 int HP_CloseFile(HP_info* header_info ){
+
   // Close file with the identical fileDesc
   BF_Block* metadata;
   BF_Block_Init(&metadata);
@@ -88,6 +94,7 @@ int HP_CloseFile(HP_info* header_info ){
   BF_Block_Destroy(&metadata);
 
   CALL_BF(BF_CloseFile(header_info->fileDesc));
+  free(header_info);
   return 0;
 }
 
