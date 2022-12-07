@@ -10,15 +10,15 @@ OBJ = $(BUILD)bf_main $(BUILD)hp_main
 
 hp:
 	@echo " Compile hp_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/hp_main.c ./src/record.c ./src/hp_file.c -lbf -o $(BUILD)hp_main -O2
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/hp_main.c ./src/record.c ./src/hp_file.c -lbf -o $(BUILD)hp_main -O2 -g
 
 bf:
 	@echo " Compile bf_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/bf_main.c ./src/record.c -lbf -o $(BUILD)bf_main -O2;
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/bf_main.c ./src/record.c -lbf -o $(BUILD)bf_main -O2 ;
 
 ht:
 	@echo " Compile ht_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/ht_main.c ./src/record.c ./src/ht_table.c -lbf -o $(BUILD)ht_main -O2
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/ht_main.c ./src/record.c ./src/ht_table.c -lbf -o $(BUILD)ht_main -O2 -g
 
 
 

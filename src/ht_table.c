@@ -20,12 +20,13 @@ int hash_function(int id , int buckets) {
 }
 
 void create_metadata(BF_Block* block, int number_of_records, BF_Block* previous_block){
-    Record* new_block = (Record*)BF_Block_GetData(block);  
-    HT_block_info metadata;
 
-    int tot_records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
-    void* addr_new = new_block + tot_records;
+    Record* data = (Record*)BF_Block_GetData(block);  
+
+    int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
+    void* addr_new = data + records;
     HT_block_info* addr_info = (HT_block_info*) addr_new;
+    HT_block_info metadata;
 
     metadata.records = number_of_records;
     metadata.overflow_block = previous_block;
