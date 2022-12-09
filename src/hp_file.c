@@ -100,6 +100,8 @@ int HP_CloseFile(HP_info* header_info ){
 
 
 int HP_InsertEntry(HP_info* header_info, Record record){
+
+  //Number of blocks currently in buffer
   int blocks;
   CALL_BF(BF_GetBlockCounter(header_info->fileDesc, &blocks)); 
 
@@ -125,11 +127,6 @@ int HP_InsertEntry(HP_info* header_info, Record record){
     new_block[0] = record;
     header_info->records = 1;  
 
-    // New block changed and now we are done with it 
-    BF_Block_SetDirty(new); 
-    CALL_BF(BF_UnpinBlock(new));      
-    BF_Block_Destroy(&new);
-
     // Store pointer to new block as metadata
     void* addr;
     // The first block does not contain a pointer to the next block, only metadata of the heap file
@@ -137,7 +134,13 @@ int HP_InsertEntry(HP_info* header_info, Record record){
       addr = prev_data + header_info->tot_records;   // Find memory address with offset
       memcpy(addr, new, sizeof(BF_Block*));
     }
-    else {
+
+    // New block changed and now we are done with it 
+    BF_Block_SetDirty(new); 
+    CALL_BF(BF_UnpinBlock(new));      
+    BF_Block_Destroy(&new);  
+
+    if(blocks == 1) {
       // We keep the first block pinned until we close the file
       BF_Block_Destroy(&prev);
       return 0;
