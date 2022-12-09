@@ -201,14 +201,14 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
   // Finding the latest block of the bucket
   int bucket = hash_function(id, ht_info->buckets);
   int blocks = ht_info->hash_block[bucket];
-  int counter = 0;      //Count how many blocks we will access.
+  int counter = 0;      // Count how many blocks we will access.
   BF_Block* cur;
   BF_Block_Init(&cur);
 
-  //Get data from the latest block of the bucket
+  // Get data from the latest block of the bucket
   CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, cur));
 
-  //Records array
+  // Records array
   Record* cur_data = (Record*)BF_Block_GetData(cur);    
 
   // Total number of records in each block
