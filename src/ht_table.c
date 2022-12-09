@@ -51,10 +51,8 @@ int HT_CreateFile(char *fileName,  int buckets){
   CALL_OR_DIE(BF_AllocateBlock(desc, block)); 
   char* before = BF_Block_GetData(block);
 
-  // Allocate memory address for the pointer ??? This is not a pointer
-  HT_info info;
-
   // Initializing HT_INFO fields
+  HT_info info;
   info.fileDesc = desc;
   info.buckets = buckets;    
   info.hash = "HashTable";
