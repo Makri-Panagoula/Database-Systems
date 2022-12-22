@@ -92,7 +92,7 @@ HT_info* HT_OpenFile(char *fileName){
   BF_Block_Init(&metadata);
 
   // Get data from first block
-  BF_GetBlock(desc, 0, metadata); 
+  CALL_OR_DIE(BF_GetBlock(desc, 0, metadata)); 
   HT_info* info = (HT_info*)BF_Block_GetData(metadata);
 
   // If the key holds an unexpected value, then this is not a hash table file
@@ -126,6 +126,7 @@ int HT_CloseFile( HT_info* HT_info ){
 }
 
 int HT_InsertEntry(HT_info* ht_info, Record record){
+
   ht_info->blocks++;      // New block is in the file
   int bucket = hash_function(record.id, ht_info->buckets);
   // The last block of the bucket
@@ -135,7 +136,7 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
   BF_Block* prev;
   BF_Block_Init(&prev);
   CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, prev));   
-  Record* prev_data = (Record*) BF_Block_GetData(prev);       // SUS!
+  Record* prev_data = (Record*) BF_Block_GetData(prev);       
 
   // The available bytes for records per block will be its total size minus the pointer part (its metadata)
   // The number of records per block will be the available bytes divided by the size of each record (records have a fixed size)
@@ -153,7 +154,7 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
   // that only stores the metadata, we allocate a new block, we store its metadata,
   // the pointer to the previous one and we save the record in it
 
-  if( info->records == tot_records || last_block == 1) {
+  if(info->records == tot_records || last_block == 1) {
 
     BF_Block* new;
     BF_Block_Init(&new);
@@ -166,7 +167,7 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
     Record* new_block = (Record*)BF_Block_GetData(new);
     new_block[0] = record;
 
-    create_metadata(new, 1, blocks);
+    create_metadata(new,1,blocks);
 
     // New block changed and now we are done with it 
     BF_Block_SetDirty(new); 
@@ -184,7 +185,6 @@ int HT_InsertEntry(HT_info* ht_info, Record record){
     prev_data[info->records] = record;
     info->records++;
   }
-
 
   // Last block changed and now we are done with it 
   BF_Block_SetDirty(prev); 
@@ -205,23 +205,22 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
   int counter = 0;      // Count how many blocks we will access.
   BF_Block* cur;
   BF_Block_Init(&cur);
-
-  // Get data from the latest block of the bucket
-  CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, cur));
-
-  // Records array
-  Record* cur_data = (Record*)BF_Block_GetData(cur);    
-
-  // Total number of records in each block
-  int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
-
-  // Get metadata of that block
-  void* addr = cur_data + records;
-  HT_block_info* info = (HT_block_info*)addr;
-
+  HT_block_info* info;
 
   // Traceback to the first block of the bucket
-  while(info->overflow_block != -1){
+  do{
+    // Get data from the latest block of the bucket
+    CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, cur));
+
+    // Records array
+    Record* cur_data = (Record*)BF_Block_GetData(cur);    
+
+    // Total number of records in each block
+    int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
+
+    // Get metadata of that block
+    void* addr = cur_data + records;
+    info = (HT_block_info*)addr;
 
     // Check every record of the block
     for(int i = 0; i < records; i++){
@@ -229,21 +228,15 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
       if(cur_data[i].id == id)
         printRecord(cur_data[i]);
     }
-
     // We are done with this one
     CALL_OR_DIE(BF_UnpinBlock(cur));  
 
     // Access the previous block of the bucket
     blocks = info->overflow_block;
-    CALL_OR_DIE(BF_GetBlock(ht_info->fileDesc, blocks, cur));
-    cur_data = (Record*)BF_Block_GetData(cur);
 
-    // Get metadata of that block
-    addr = cur_data + records;
-    info = (HT_block_info*)addr;
-    // Update counter of how many records we've gone through
+    // Update counter of how many blocks we've gone through
     counter++;
-  }
+  }while(blocks != -1);
 
   BF_Block_Destroy(&cur);
   
@@ -254,6 +247,7 @@ int HT_GetAllEntries(HT_info* ht_info, void *value ){
 
 
 int HashStatistics(char* filename){
+  
   // Open file 
   int desc;
   CALL_OR_DIE(BF_OpenFile(filename, &desc));
@@ -262,7 +256,7 @@ int HashStatistics(char* filename){
   BF_Block_Init(&metadata);
 
   // Get metadata of the file from the first block
-  BF_GetBlock(desc, 0, metadata); 
+  CALL_OR_DIE(BF_GetBlock(desc, 0, metadata)); 
   HT_info* info = (HT_info*)BF_Block_GetData(metadata);
 
   int blocks;
@@ -276,36 +270,38 @@ int HashStatistics(char* filename){
   int avg_records;
 
   for(int i = 0; i < buckets; i++){
+
     int sum = 0;                                // Calculate how many records we have 
     int last_block = info->hash_block[i];       // Last block of each bucket
-    
-    // Records array
-    Record* cur_data = (Record*)BF_Block_GetData(last_block);    
 
     // Total number of records in each block
     int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);
 
+    HT_block_info* block_info;
+
+  // Traceback to the first block of the bucket
+  do{
+    // Get data from the latest block of the bucket
+    CALL_OR_DIE(BF_GetBlock(info->fileDesc, last_block, metadata));
+
+    // Records array
+    Record* cur_data = (Record*)BF_Block_GetData(metadata);    s
+
     // Get metadata of that block
     void* addr = cur_data + records;
-    HT_block_info* block_info = (HT_block_info*)addr;
+    block_info = (HT_block_info*)addr;
 
-    // Traceback to the first block of the bucket
-    while(block_info->overflow_block != -1){
+    // We are done with this one
+    CALL_OR_DIE(BF_UnpinBlock(metadata));  
 
-      // We are done with this one
-      CALL_OR_DIE(BF_UnpinBlock(last_block));  
+    // Access the previous block of the bucket
+    last_block = block_info->overflow_block;
 
-      // Access the previous block of the bucket
-      blocks = block_info->overflow_block;
-      CALL_OR_DIE(BF_GetBlock(info->fileDesc, blocks, last_block));
-      cur_data = (Record*)BF_Block_GetData(last_block);
+    // Update counter of how many records we've gone through
+    sum += block_info->records ;
+    printf("In loop %d\n",i);
+  } while(last_block != -1);
 
-      // Get metadata of the next block
-      addr = cur_data + records;
-      block_info = (HT_block_info*)addr;
-
-      sum += block_info->records;
-    }
     total_sum += sum;
 
     if (sum > max)    // Find the number of max records
@@ -313,9 +309,9 @@ int HashStatistics(char* filename){
     if(sum < min)     // Find the number of min records
       min = sum;
   }
+
   avg_records = total_sum / buckets;    // Find the average number of records
   printf("Min number of records: %d\n", min);
   printf("Max number of records: %d\n", max);
   printf("Average number of records: %d\n", avg_records);
-
 }

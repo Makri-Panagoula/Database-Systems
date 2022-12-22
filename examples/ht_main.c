@@ -1,4 +1,4 @@
-#include <stdio.h>
+,#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -32,10 +32,12 @@ int main() {
     printf("Record id: %d\n", id);
     record = randomRecord();
     HT_InsertEntry(info, record);
+    printRecord(record);
   }
 
   printf("RUN PrintAllEntries\n");
   int id = rand() % RECORDS_NUM;
+  printf("Id is : %d\n",id);
   HT_GetAllEntries(info, &id);
 
   HashStatistics(FILE_NAME);
