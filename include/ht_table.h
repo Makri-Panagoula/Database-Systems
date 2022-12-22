@@ -5,17 +5,16 @@
 
 
 typedef struct {
-
+    int blocks;                         // Number of blocks in the file
     int fileDesc;
-    int buckets;
-    char* hash;             // Identifier for hash table
-    // Tells us which is the last block that corresponds to the bucket with number index.
-    int hash_block[MAX_BUCKETS];            
+    int buckets;                        // Number of buckets in the file
+    char* hash;                         // Identifier for hash table
+    int hash_block[MAX_BUCKETS];        // Tells us which is the last block that corresponds to the bucket with number index.
 } HT_info;
 
 typedef struct {
 
-    int records;   // Number of records in current block
+    int records;         // Number of records in current block
     int overflow_block;  // Pointer to overflow block
     
 } HT_block_info;
@@ -68,3 +67,7 @@ int HT_GetAllEntries(HT_info* header_info, /*επικεφαλίδα του αρ�
 
 
 #endif // HT_FILE_H
+
+/* Η συνάρτηση διαβάζει το αρχείο με όνομα filename και τυπώνει τα στατιστικά που αναφέρθηκαν προηγουμένως. 
+Σε περίπτωση επιτυχίας επιστρέφει 0, ενώ σε περίπτωση λάθους επιστρέφει -1.*/
+int HashStatistics(char* filename /* όνομα του αρχείου που ενδιαφέρει */ );
