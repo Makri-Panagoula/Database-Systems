@@ -176,7 +176,7 @@ int HP_GetAllEntries(HP_info* header_info, int id ){
   for(int i = 0; i < blocks; i++) {
 
     // Get data from each block 
-    CALL_BF(BF_GetBlock(header_info->fileDesc , i , cur));   
+    CALL_BF(BF_GetBlock(header_info->fileDesc, i , cur));   
 
     // If we are in the last block it might not have the max number of records it
     // can store, so we access only the existing ones
