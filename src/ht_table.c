@@ -285,7 +285,7 @@ int HashStatistics(char* filename){
     CALL_OR_DIE(BF_GetBlock(info->fileDesc, last_block, metadata));
 
     // Records array
-    Record* cur_data = (Record*)BF_Block_GetData(metadata);    s
+    Record* cur_data = (Record*)BF_Block_GetData(metadata);    
 
     // Get metadata of that block
     void* addr = cur_data + records;
