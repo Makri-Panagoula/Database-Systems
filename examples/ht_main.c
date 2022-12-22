@@ -5,7 +5,7 @@
 #include "bf.h"
 #include "ht_table.h"
 
-#define RECORDS_NUM 200 // you can change it if you want
+#define RECORDS_NUM 150 // you can change it if you want
 #define FILE_NAME "data.db"
 
 #define CALL_OR_DIE(call)     \
@@ -29,10 +29,10 @@ int main() {
   int r;
   printf("Insert Entries\n");
   for (int id = 0; id < RECORDS_NUM; ++id) {
-    printf("Record id: %d\n", id);
+    // printf("Record id: %d\n", id);
     record = randomRecord();
     HT_InsertEntry(info, record);
-    printRecord(record);
+    // printRecord(record);
   }
 
   printf("RUN PrintAllEntries\n");

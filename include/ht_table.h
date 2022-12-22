@@ -5,7 +5,6 @@
 
 
 typedef struct {
-    int blocks;                         // Number of blocks in the file
     int fileDesc;
     int buckets;                        // Number of buckets in the file
     char* hash;                         // Identifier for hash table
