@@ -27,9 +27,9 @@
 Παρατηρούμε οτι με βάση το hash function που γίνεται με τον αύξοντα αριθμό του id, οι εγγραφές θα είναι ισομοιρασμένες στα buckets. Επομένως τρέχοντας το `HashStatistics` περιμένουμε ίσο ελάχιστο, μέσο και μέγιστο αριθμό εγγραφών ανα block.
 
 ## Makefile
+Use the Makefile to compile, run and clean using the following commands:
 
 **Heap** <br/>
-Use the Makefile to compile, run and clean using the following commands:
 
 ```bash
 $ make hp
@@ -38,7 +38,6 @@ $ make clean
 ```
 
 **HashTable** <br/>
-Use the Makefile to compile, run and clean using the following commands:
 
 ```bash
 $ make ht
