@@ -20,7 +20,8 @@ int hash_function(int id , int buckets) {
   return id % buckets; 
 }
 
-// Initializes HP_block_info fields with number of records and previous_block  
+void access_block_records()
+
 void create_metadata(BF_Block* block, int number_of_records, int previous_block){
 
     Record* data = (Record*)BF_Block_GetData(block);  

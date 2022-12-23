@@ -2,17 +2,33 @@
 #define SHT_TABLE_H
 #include <record.h>
 #include <ht_table.h>
-
-
-
+#define MAX_BYTES 25     // Consider maximum length of a surname being 30
+#define MAX_BUCKETS 20
 
 typedef struct {
-    // Να το συμπληρώσετε
+
+    int sfileDesc;                  /* identifier for secondary hashtable file */
+    int buckets;                    /* number of buckets in secondary hashtable */
+    int fileDesc;                   /* identifier for hashtable file */    
+    char* identifier;               /* identifier for secondary hashtable file */  
+    int hash_block[MAX_BUCKETS];    /* Tells us which is the last block that corresponds to the bucket with number index.*/
+
 } SHT_info;
 
 typedef struct {
-    // Να το συμπληρώσετε
+
+    int records;         // Number of records in current block
+    int overflow_block;  // Pointer to overflow block
+
 } SHT_block_info;
+
+typedef struct{
+    char surname[MAX_BYTES];    // Our key value is the surname
+    int block_id;               // Number of block this record is found in hashtable
+} SHT_Record;
+
+
+access_hashtable_block(HT_info ht_info, int wanted_block);
 
 /*Η συνάρτηση SHT_CreateSecondaryIndex χρησιμοποιείται για τη δημιουργία
 και κατάλληλη αρχικοποίηση ενός αρχείου δευτερεύοντος κατακερματισμού με
@@ -67,3 +83,8 @@ int SHT_SecondaryGetAllEntries(
 
 
 #endif // SHT_FILE_H
+
+
+/*Η συνάρτηση διαβάζει το αρχείο με όνομα filename και τυπώνει τα στατιστικά που αναφέρθηκαν 
+προηγουμένως. Σε περίπτωση επιτυχίας επιστρέφει 0, ενώ σε περίπτωση λάθους επιστρέφει -1.*/
+int HashStatistics(char* filename);

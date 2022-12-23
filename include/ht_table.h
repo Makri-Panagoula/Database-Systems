@@ -3,6 +3,8 @@
 #include <record.h>
 #define MAX_BUCKETS 20
 
+// Initializes HP_block_info fields with number of records and previous_block  
+void create_metadata(BF_Block* block, int number_of_records, int previous_block);
 
 typedef struct {
     int fileDesc;
