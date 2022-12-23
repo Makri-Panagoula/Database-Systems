@@ -2,6 +2,7 @@
 INCLUDE = ./include/
 LIBRARY = ./lib/
 BUILD = ./build/
+SRC = ./src/
 
 DB = *.db
 
@@ -10,17 +11,20 @@ OBJ = $(BUILD)bf_main $(BUILD)hp_main
 
 hp:
 	@echo " Compile hp_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/hp_main.c ./src/record.c ./src/hp_file.c -lbf -o $(BUILD)hp_main -O2 -g
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/hp_main.c $(SRC)record.c $(SRC)hp_file.c -lbf -o $(BUILD)hp_main -O2 -g
 
 bf:
 	@echo " Compile bf_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/bf_main.c ./src/record.c -lbf -o $(BUILD)bf_main -O2 ;
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/bf_main.c $(SRC)record.c -lbf -o $(BUILD)bf_main -O2 ;
 
 ht:
 	@echo " Compile ht_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/ht_main.c ./src/record.c ./src/ht_table.c -lbf -o $(BUILD)ht_main -O2 -g 
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/ht_main.c $(SRC)record.c $(SRC)ht_table.c -lbf -o $(BUILD)ht_main -O2 -g 
 
 
+sht:
+	@echo " Compile hp_main ...";
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/sht_main.c $(SRC)record.c $(SRC)sht_table.c $(SRC)ht_table.c -lbf -o $(BUILD)sht_main -O2
 
 runhp:
 	@echo "Runing hp:"
@@ -33,6 +37,10 @@ runbf:
 runht:
 	@echo "Running ht:"
 	$(BUILD)ht_main
+
+runsht: 
+	@echo "Running sht:"
+	$(BUILD)sht_main
 
 
 # Clean
