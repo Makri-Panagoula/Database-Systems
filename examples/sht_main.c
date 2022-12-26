@@ -5,10 +5,11 @@
 #include "bf.h"
 #include "ht_table.h"
 #include "sht_table.h"
+//#include "hash_statistics.h"
 
 #define RECORDS_NUM 30 // you can change it if you want
-#define FILE_NAME "data.db"
-#define INDEX_NAME "index.db"
+#define FILE_NAME "data.db"   // Hash Table
+#define INDEX_NAME "index.db" // Secondary Hash Table
 
 #define CALL_OR_DIE(call)     \
   {                           \
@@ -23,11 +24,23 @@
 int main() {
     srand(12569874);
     BF_Init(LRU);
-    // Αρχικοποιήσεις
-    HT_CreateFile(FILE_NAME,10);
-    SHT_CreateSecondaryIndex(INDEX_NAME,10,FILE_NAME);
-    HT_info* info = HT_OpenFile(FILE_NAME);
+
+    /* Create Hash File */
+    if(HT_CreateFile(FILE_NAME,10) != 0)
+      printf("Error! Could not create file\n");
+
+    /* Create Secondary Hash File */
+    if(SHT_CreateSecondaryIndex(INDEX_NAME, 10, FILE_NAME) != 0)
+      printf("Error! Could not create file\n");
+    
+    HT_info* info = HT_OpenFile(FILE_NAME); 
+    if(info == NULL)
+      printf("Error! Could not open file\n");
+
     SHT_info* index_info = SHT_OpenSecondaryIndex(INDEX_NAME);
+    if (index_info == NULL)
+      printf("Error! Could not open file\n");
+    
 
     // Θα ψάξουμε στην συνέχεια το όνομα searchName
     Record record=randomRecord();
@@ -39,15 +52,22 @@ int main() {
     for (int id = 0; id < RECORDS_NUM; ++id) {
         record = randomRecord();
         int block_id = HT_InsertEntry(info, record);
-        SHT_SecondaryInsertEntry(index_info, record, block_id);
+        if(SHT_SecondaryInsertEntry(index_info, record, block_id) == -1)
+          printf("Error in Insert!");
     }
     // Τυπώνουμε όλες τις εγγραφές με όνομα searchName
     printf("RUN PrintAllEntries for name %s\n",searchName);
     SHT_SecondaryGetAllEntries(info,index_info,searchName);
 
+    // Testing SHTStatistics
+    printf("\nSTATISTICS\n");
+    HashStatistics(INDEX_NAME);
+
     // Κλείνουμε το αρχείο κατακερματισμού και το δευτερεύον ευρετήριο
-    SHT_CloseSecondaryIndex(index_info);
+    if(SHT_CloseSecondaryIndex(index_info) == 0)
+      printf("Closed file successfully!\n");
+    else printf("Error! Could not create file.\n");
     HT_CloseFile(info);
-    //
     BF_Close();
 }
+

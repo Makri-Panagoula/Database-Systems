@@ -1,22 +1,25 @@
 #ifndef HT_TABLE_H
 #define HT_TABLE_H
 #include <record.h>
+#include "bf.h"
+
 #define MAX_BUCKETS 20
 
 // Initializes HP_block_info fields with number of records and previous_block  
 void create_metadata(BF_Block* block, int number_of_records, int previous_block);
 
 typedef struct {
+    
+    char* identifier;                         // Identifier for hash table
     int fileDesc;
     int buckets;                        // Number of buckets in the file
-    char* hash;                         // Identifier for hash table
     int hash_block[MAX_BUCKETS];        // Tells us which is the last block that corresponds to the bucket with number index.
 } HT_info;
 
 typedef struct {
 
     int records;         // Number of records in current block
-    int overflow_block;  // Pointer to overflow block
+    int overflow_block;  // Number of overflow block
     
 } HT_block_info;
 
@@ -65,9 +68,9 @@ int HT_InsertEntry(HT_info* header_info, /*επικεφαλίδα του αρχ�
 Σε περίπτωση επιτυχίας επιστρέφει το πλήθος των blocks που διαβάστηκαν, ενώ σε περίπτωση λάθους επιστρέφει -1.*/
 int HT_GetAllEntries(HT_info* header_info, /*επικεφαλίδα του αρχείου*/
 	void *value /*τιμή του πεδίου-κλειδιού προς αναζήτηση*/);
-
-
+    
 #endif // HT_FILE_H
+
 
 /* Η συνάρτηση διαβάζει το αρχείο με όνομα filename και τυπώνει τα στατιστικά που αναφέρθηκαν προηγουμένως. 
 Σε περίπτωση επιτυχίας επιστρέφει 0, ενώ σε περίπτωση λάθους επιστρέφει -1.*/

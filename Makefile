@@ -19,12 +19,12 @@ bf:
 
 ht:
 	@echo " Compile ht_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/ht_main.c $(SRC)record.c $(SRC)ht_table.c -lbf -o $(BUILD)ht_main -O2 -g 
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/ht_main.c  $(SRC)hash_statistics.c $(SRC)record.c $(SRC)ht_table.c -lbf -o $(BUILD)ht_main -O2 -g 
 
 
 sht:
 	@echo " Compile hp_main ...";
-	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/sht_main.c $(SRC)record.c $(SRC)sht_table.c $(SRC)ht_table.c -lbf -o $(BUILD)sht_main -O2
+	gcc -I $(INCLUDE) -L $(LIBRARY) -Wl,-rpath,$(LIBRARY) ./examples/sht_main.c $(SRC)hash_statistics.c $(SRC)record.c $(SRC)sht_table.c $(SRC)ht_table.c -lbf -o $(BUILD)sht_main -O2
 
 runhp:
 	@echo "Runing hp:"
