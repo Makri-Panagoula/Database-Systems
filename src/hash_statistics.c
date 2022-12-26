@@ -35,7 +35,7 @@ int HashStatistics(char* filename){
 
     printf("\nHashtable\n");
     buckets = hash->buckets;                  // Number of buckets in the file
-    for(int i=0; i<MAX_BUCKETS; i++)
+    for(int i = 0; i < MAX_BUCKETS; i++)
       hash_block[i] = hash->hash_block[i];
     
     printf("hash_block address: %p\n", hash_block);
@@ -44,7 +44,7 @@ int HashStatistics(char* filename){
     
     printf("\nSecondary Hashtable\n");
     buckets = sec_hash->buckets;                  // Number of buckets in the file
-    for(int i=0; i<MAX_BUCKETS; i++)
+    for(int i = 0; i < MAX_BUCKETS; i++)
       hash_block[i] = sec_hash->hash_block[i];
   }
 
@@ -53,14 +53,15 @@ int HashStatistics(char* filename){
   int min = INT_MAX;
   int total_sum = 0;                  // Total number of records in all buckets
   int total_blocks = 0;               // Total number of blocks in all buckets
-  int overflow_buckets = 0;          // Total number of buckets that have overflow blocks  
-  BF_GetBlockCounter(desc, &blocks); // Get number of blocks in the file
+  int overflow_buckets = 0;           // Total number of buckets that have overflow blocks  
+  BF_GetBlockCounter(desc, &blocks);  // Get number of blocks in the file
   printf("Number of blocks: %d\n\n", blocks);
 
   for(int i = 0; i < buckets; i++){
 
     int sum = 0;                          // Calculate how many records we have 
     int last_block = hash_block[i];       // Last block of each bucket
+    printf("Last block: %d\n", last_block);
     int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);             // Total number of records in each block
     int bucket_blocks = 0;
 
@@ -70,6 +71,7 @@ int HashStatistics(char* filename){
     do{
       // Get data from the latest block of the bucket
       CALL_OR_DIE(BF_GetBlock(desc, last_block, metadata));
+      printf("Last block INSIDE DO: %d\n", last_block);
 
       // Records array
       Record* cur_data = (Record*)BF_Block_GetData(metadata);    
@@ -85,8 +87,8 @@ int HashStatistics(char* filename){
       last_block = block_info->overflow_block;
 
       // Update counter of how many records we've gone through
-      sum += block_info->records ;
-      total_blocks+=1;
+      sum += block_info->records;
+      total_blocks += 1;
       bucket_blocks++;
     } while(last_block != -1);
 
