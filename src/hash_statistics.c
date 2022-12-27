@@ -61,7 +61,6 @@ int HashStatistics(char* filename){
 
     int sum = 0;                          // Calculate how many records we have 
     int last_block = hash_block[i];       // Last block of each bucket
-    printf("Last block: %d\n", last_block);
     int records = (BF_BLOCK_SIZE - sizeof(HT_block_info)) / sizeof(Record);             // Total number of records in each block
     int bucket_blocks = 0;
 
@@ -71,7 +70,7 @@ int HashStatistics(char* filename){
     do{
       // Get data from the latest block of the bucket
       CALL_OR_DIE(BF_GetBlock(desc, last_block, metadata));
-      printf("Last block INSIDE DO: %d\n", last_block);
+      printf("Last block HERE in DO: %d\n", last_block);
 
       // Records array
       Record* cur_data = (Record*)BF_Block_GetData(metadata);    
@@ -85,6 +84,8 @@ int HashStatistics(char* filename){
 
       // Access the previous block of the bucket
       last_block = block_info->overflow_block;
+      printf("Last block INSIDE DO: %d\n", last_block);
+      // break;    // Added this break here for debugging 
 
       // Update counter of how many records we've gone through
       sum += block_info->records;
@@ -100,11 +101,11 @@ int HashStatistics(char* filename){
       min = sum;
 
     if(bucket_blocks > 1) {             // Bucket blocks has the total number of blocks
-      printf("Bucket number %d has %d overfow blocks\n",i , bucket_blocks-1);
+      printf("Bucket number %d has %d overfow blocks\n", i, bucket_blocks - 1);
       overflow_buckets++;
     }
     else {
-      printf("Bucket number %d doesn't have overfow blocks\n",i);
+      printf("Bucket number %d doesn't have overfow blocks\n", i);
     }
   }
 
