@@ -26,7 +26,7 @@ int main() {
     BF_Init(LRU);
 
     /* Create Hash File */
-    if(HT_CreateFile(FILE_NAME,10) != 0)
+    if(HT_CreateFile(FILE_NAME, 10) != 0)
       printf("Error! Could not create file\n");
 
     /* Create Secondary Hash File */
@@ -43,7 +43,7 @@ int main() {
     
 
     // Θα ψάξουμε στην συνέχεια το όνομα searchName
-    Record record=randomRecord();
+    Record record = randomRecord();
     char searchName[15];
     strcpy(searchName, record.name);
 
@@ -55,9 +55,10 @@ int main() {
         if(SHT_SecondaryInsertEntry(index_info, record, block_id) == -1)
           printf("Error in Insert!");
     }
+
     // Τυπώνουμε όλες τις εγγραφές με όνομα searchName
-    printf("RUN PrintAllEntries for name %s\n",searchName);
-    SHT_SecondaryGetAllEntries(info,index_info,searchName);
+    printf("RUN PrintAllEntries for name %s\n", searchName);
+    SHT_SecondaryGetAllEntries(info, index_info, searchName);
 
     // Testing SHTStatistics
     printf("\nSTATISTICS\n");
@@ -66,7 +67,8 @@ int main() {
     // Κλείνουμε το αρχείο κατακερματισμού και το δευτερεύον ευρετήριο
     if(SHT_CloseSecondaryIndex(index_info) == 0)
       printf("Closed file successfully!\n");
-    else printf("Error! Could not create file.\n");
+    else printf("Error! Could not close file.\n");
+    
     HT_CloseFile(info);
     BF_Close();
 }

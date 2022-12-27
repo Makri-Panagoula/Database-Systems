@@ -21,10 +21,14 @@ int main() {
 
   BF_Init(LRU);
 
-  int test = HP_CreateFile(FILE_NAME);
-  printf("CreateFile: %d\n",test);
+  /* Create Heap File */
+  if(HP_CreateFile(FILE_NAME) != 0)
+    printf("Error! Could not create file\n");
+
+  /* Open Heap File */
   HP_info* info = HP_OpenFile(FILE_NAME);
-  printf("OpenFile: %p\n",info); 
+  if(info == NULL)
+      printf("Error! Could not open file\n");
 
   Record record;
   srand(12569874);
@@ -43,6 +47,8 @@ int main() {
   printf("Searching for entry with id: %d\n",id);
   HP_GetAllEntries(info, id);
 
-  HP_CloseFile(info);
+  if(HP_CloseFile(info) != 0)
+    printf("Could not close Heap file");
+    
   BF_Close();
 }

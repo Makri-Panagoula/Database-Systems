@@ -20,16 +20,19 @@
 int main() {
   BF_Init(LRU);
 
-  HT_CreateFile(FILE_NAME,10);
+  /* Create Hash File */
+  if(HT_CreateFile(FILE_NAME, 10) != 0)
+    printf("Error! Could not create file\n");
+
+  /* Open Hash File */
   HT_info* info = HT_OpenFile(FILE_NAME);
-  printf("\n%p\n",info);
+  if(info == NULL)
+      printf("Error! Could not open file\n");
 
   Record record;
   srand(12569874);
-  int r;
   printf("Insert Entries\n");
   for (int id = 0; id < RECORDS_NUM; ++id) {
-    // printf("Record id: %d\n", id);
     record = randomRecord();
     HT_InsertEntry(info, record);
     // printRecord(record);
@@ -37,7 +40,7 @@ int main() {
 
   printf("RUN PrintAllEntries\n");
   int id = rand() % RECORDS_NUM;
-  printf("Id is : %d\n",id);
+  printf("Id is : %d\n", id);
   HT_GetAllEntries(info, &id);
 
   HashStatistics(FILE_NAME);
