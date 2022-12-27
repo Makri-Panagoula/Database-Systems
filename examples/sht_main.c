@@ -7,7 +7,7 @@
 #include "sht_table.h"
 //#include "hash_statistics.h"
 
-#define RECORDS_NUM 30 // you can change it if you want
+#define RECORDS_NUM 350 // you can change it if you want
 #define FILE_NAME "data.db"   // Hash Table
 #define INDEX_NAME "index.db" // Secondary Hash Table
 

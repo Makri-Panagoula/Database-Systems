@@ -28,7 +28,9 @@ typedef struct{
     int block_id;               // Number of block this record is found in hashtable
 } SHT_Record;
 
+// Initializes SHT_block_info fields with number of records and previous_block  
 void sht_metadata(BF_Block* block, int number_of_records, int previous_block);
+
 /*Η συνάρτηση SHT_CreateSecondaryIndex χρησιμοποιείται για τη δημιουργία
 και κατάλληλη αρχικοποίηση ενός αρχείου δευτερεύοντος κατακερματισμού με
 όνομα sfileName για το αρχείο πρωτεύοντος κατακερματισμού fileName. Σε
