@@ -33,7 +33,7 @@ int main() {
   Record record;
   srand(12569874);
   int r;
-  printf("Insert Entries\n");
+  printf("---------- Insert Entries ----------\n");
   for (int id = 0; id < RECORDS_NUM; ++id) {
     record = randomRecord();
     int code = HP_InsertEntry(info, record);;
@@ -42,10 +42,12 @@ int main() {
     }
   }
 
-  printf("RUN PrintAllEntries\n");
+  printf("---------- PrintAllEntries ----------\n");
   int id = rand() % RECORDS_NUM;
   printf("Searching for entry with id: %d\n",id);
-  HP_GetAllEntries(info, id);
+
+  if(HP_GetAllEntries(info, id) == 0)
+    printf("Error in HP_GetAllEntries!\n");
 
   if(HP_CloseFile(info) != 0)
     printf("Could not close Heap file");

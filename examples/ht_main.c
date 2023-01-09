@@ -31,19 +31,23 @@ int main() {
 
   Record record;
   srand(12569874);
-  printf("Insert Entries\n");
+  printf("---------- Insert Entries ----------\n");
   for (int id = 0; id < RECORDS_NUM; ++id) {
     record = randomRecord();
     HT_InsertEntry(info, record);
     // printRecord(record);
   }
 
-  printf("RUN PrintAllEntries\n");
+  printf("---------- PrintAllEntries ----------\n");
   int id = rand() % RECORDS_NUM;
   printf("Id is : %d\n", id);
-  HT_GetAllEntries(info, &id);
 
-  HashStatistics(FILE_NAME);
+  if(HT_GetAllEntries(info, &id) == 0)
+     printf("Error in HT_GetAllEntries!\n");
+
+  printf("\n---------- STATISTICS ----------\n");
+  if(HashStatistics(FILE_NAME) != 0)
+    printf("Error in HashStatistics\n");
 
   HT_CloseFile(info);
   BF_Close();

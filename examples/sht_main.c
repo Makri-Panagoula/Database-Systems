@@ -48,7 +48,7 @@ int main() {
     strcpy(searchName, record.name);
 
     // Κάνουμε εισαγωγή τυχαίων εγγραφών τόσο στο αρχείο κατακερματισμού τις οποίες προσθέτουμε και στο δευτερεύον ευρετήριο
-    printf("Insert Entries\n");
+    printf("---------- Insert Entries ----------\n");
     for (int id = 0; id < RECORDS_NUM; ++id) {
         record = randomRecord();
         int block_id = HT_InsertEntry(info, record);
@@ -58,11 +58,13 @@ int main() {
 
     // Τυπώνουμε όλες τις εγγραφές με όνομα searchName
     printf("RUN PrintAllEntries for name %s\n", searchName);
-    SHT_SecondaryGetAllEntries(info, index_info, searchName);
+    if(SHT_SecondaryGetAllEntries(info, index_info, searchName) == 0)
+      printf("Error in SHT_SecondaryGetAllEntries!\n");
 
     // Testing SHTStatistics
-    printf("\nSTATISTICS\n");
-    HashStatistics(INDEX_NAME);
+    printf("\n---------- STATISTICS ----------\n");
+    if(HashStatistics(INDEX_NAME) != 0) 
+      printf("Error in HashStatistics\n");
 
     // Κλείνουμε το αρχείο κατακερματισμού και το δευτερεύον ευρετήριο
     if(SHT_CloseSecondaryIndex(index_info) == 0)

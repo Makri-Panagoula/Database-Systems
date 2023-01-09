@@ -85,7 +85,7 @@ void hash_table_statistics(int desc, HT_info* info){
 
   int avg_blocks = total_blocks / info->buckets;    // Find the average number of records
   printf("Average number of blocks: %d\n", avg_blocks);
-  printf(" There are %d buckets with overflow blocks.", overflow_buckets);
+  printf(" There are %d buckets with overflow blocks.\n", overflow_buckets);
 
   BF_Block_Destroy(&tmp);  
 }
