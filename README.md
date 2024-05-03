@@ -85,3 +85,9 @@ $ make sht
 $ make runsht
 $ make clean
 ```
+
+## Contributors
+
+- [Ioanna Kontemeniotis](https://github.com/joannakonte)
+- [Penny Makri](https://github.com/Makri-Panagoula)
+
