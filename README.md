@@ -1,46 +1,36 @@
 # DBSM
 
-Ιωάννα Κοντεμενιώτου - Α.Μ: 1115202000227 <br/>
-Παναγούλα Μακρή -  Α.Μ: 115202000119
-
 ## Heap
-Ως αναγνωριστίκο στο struct HP_info έχουμε ένα string το οποίο έχει την τιμή "Heap" για να γνωρίζουμε ότι η δομή πρόκειται όντως για Heap. Δεν κάνουμε unpin το 1ο block παρα μόνο στην συνάρτηση `Closefile`. Εισάγουμε δεδομένα στο τέλος του αρχείου και αν δεν χωράνε στο ήδη υπάρχον block δημιουργούμε νέο. 
+As an identifier in the `HP_info` struct, we have a string that has the value "Heap" so that we know that the structure is indeed a Heap. We do not unpin the 1st block except in the `Closefile` function. Data is inserted at the end of the file, and if it doesn't fit in the already existing block, we create a new one.
 
-**HP_GetAllEntries:** Προσπελαύνουμε όλες τις εγγραφές σειριακά 
-
+**HP_GetAllEntries:** We access all entries sequentially.
 
 ## Hash Table
-Στο block 0 του αρχείου κρατάμε τα μεταδεδομένα στα οποία συμπεριλαμβάνεται ένας πίνακας που το index του αντιστοιχεί στον αριθμό του bucket. Σε κάθε θέση του πίνακα βρίσκεται ο αριθμός του τελευταίου block του αντίστοιχου bucket.
-Επίσης στο struct HT_info κρατάμε μια πληροφορία ένα string το οποίο όταν έχει την τιμή "HashTable" για να γνωρίζουμε ότι η δομή πρόκειται όντως για HashTable. 
-Τα μεταδεδόμενα κάθε block (HT_block_info) κρατάνε τον αριθμό του προηγούμενου block και αυτόν των τρέχουσων εγγραφών στο block.
+In the block 0 of the file, we store metadata, including an array where the index corresponds to the bucket number. At each position of the array, there is the number of the last block of the corresponding bucket. Additionally,
 
-**HT_CreateFile:** Όταν δημιουργούμε τα μεταδεδομένα δημιουργούμε και ένα αριθμό blocks αντίστοιχο στον αριθμό buckets που έχουμε ώστε να μπορεί να γίνει αντιστοίχιση στον πίνακα. Επειδή πρόκειται για τα αρχικά block και δεν έχουν προηγούμενο, η τιμή αυτή στα μεταδεδομένα θα είναι -1.
-Δεν κάνουμε unpin το πρώτο block του αρχείου δίοτι κρατά τα μεταδεδομένα και θέλουμε να μείνει στη μνήμη. 
+**HT_CreateFile:** When creating metadata, we also create a number of blocks corresponding to the number of buckets so that mapping to the array can occur. Since these are initial blocks and have no predecessor, the value in the metadata will be -1. We do not unpin the first block of the file as it holds the metadata, and we want it to remain in memory.
 
-**HT_InsertEntry:**
-Όταν κάνουμε μια εισαγωγή εγγραφής ελέγχουμε εαν το τελευταίο block χωράει αλλιώς δημιουργούμε νέο block και με τη βοήθεια της συνάρτησης `create_metadata` αρχικοποιούμε τα μεταδεδομένα του. Ανανεώνουμε τα μεταδεδομένα του αρχείου, αφού έχει αλλάξει το τελευταίο block του bucket και γράφουμε τις αλλαγές αυτές στο block 0. Αν το τελευταίο block χωράει κι άλλη εγγραφή τότε η εγγραφή εισάγεται σε αυτό. Τέλος, αυξάνουμε τον αριθμό των εγγραφών στο συγκεκριμένο block.
+**HT_InsertEntry:** When inserting a record, we check if the last block fits; otherwise, we create a new one and initialize its metadata using the `create_metadata` function. We update the metadata of the file, as the last block of the bucket has changed, and write these changes to block 0. If the last block can accommodate more entries, the entry is inserted there. Finally, we increment the number of entries in that particular block.
 
-**HT_CloseFile:** Εδώ γίνεται unpin το block 0.
+**HT_CloseFile:** Here, block 0 is unpinned.
 
+**HT_GetAllEntries:** We hash the key given by the function and access the bucket blocks starting from the last and recursively moving backward to the first, checking the records of each block. It returns the number of blocks accessed.
 
-**HT_GetAllEntries:** Hasharουμε το κλειδί που μας δίνεται από την συνάρτηση και προσπελαύνουμε τα blocks του bucket ξεκινώντας από το τελευταίο και πηγαίνοντας αναδρομικά προς τα πίσω στο πρώτο, ελέγχοντας τις εγγραφές του κάθε block. Επιστρέφει τον αριθμο blocks που έχουμε προσπελάσει.
+**HashStatistics:** Following a similar logic to the `HT_GetAllEntries` function, we now access the file's metadata first through block 0. We calculate how many blocks a file has and from all the buckets, find which has the minimum, mean, and maximum number of records. Additionally, we calculate the mean number of blocks each bucket has and the number of buckets that have overflow blocks, along with how many blocks they are for each bucket as required.
 
-**HashStatistics:** Ακολουθούμε παρόμοια λογική με την συνάρτηση `HT_GetAllEntries`, μόνο που τώρα αποκτάμε πρόσβαση στα μεταδεδομένα του αρχείου πρώτα μέσα από το block 0. Υπολογίζουμε το πόσα blocks έχει ένα αρχείο και από όλα τα buckets βρίσκουμε ποιο έχει το ελάχιστο, το μέσο και το μέγιστο πλήθος εγγραφών. Ακόμη, υπολογίζουμε το μέσο αριθμό των blocks που έχει κάθε bucket και το πλήθος των buckets που έχουν μπλοκ υπερχείλισης, και πόσα μπλοκ είναι αυτά για κάθε bucket όπως ζητείται.
-
-Παρατηρούμε οτι με βάση το hash function που γίνεται με τον αύξοντα αριθμό του id, οι εγγραφές θα είναι ισομοιρασμένες στα buckets. Επομένως τρέχοντας το `HashStatistics` περιμένουμε ίσο ελάχιστο, μέσο και μέγιστο αριθμό εγγραφών ανα block.
+Observing that entries will be evenly distributed in buckets based on the hash function using the incrementing id number, we expect equal minimum, mean, and maximum numbers of records per block by running the `HashStatistics` function.
 
 ## Makefile
-Use the Makefile to compile, run and clean using the following commands:
+Use the Makefile to compile, run, and clean using the following commands:
 
-**Heap** <br/>
+**Heap**:
 
 ```bash
 $ make hp
 $ make runhp
 $ make clean
 ```
-
-**HashTable** <br/>
+**HashTable**:
 
 ```bash
 $ make ht
@@ -49,34 +39,41 @@ $ make clean
 ```
 
 ## Secondary Hash Table
-Ως αναγνωριστίκο στο struct SHT_info έχουμε ένα string το οποίο έχει την τιμή "Secondary HashTable" για να γνωρίζουμε ότι η δομή πρόκειται όντως για Secondary Hash Table. Δεν κάνουμε unpin το 1ο block παρα μόνο στην συνάρτηση `Closefile`. Εισάγουμε δεδομένα στο τέλος του αρχείου και αν δεν χωράνε στο ήδη υπάρχον block δημιουργούμε νέο. Άκολουθούμε την ίδια υλοποιήση με το Hash Table με διαφορά ότι εισάγουμε ζεύγος που αποτελείται από το όνομα της κάθε εγγραφής και τον αριθμό του block που βρίσκεται στο Hash Table.
 
-**sht_metadata**
-Καλούμε τη συνάρτηση αυτή κάθε φορά που θέλουμε δημιουργούμε ένα νέο block σε κάθε bucket και αρχικοποιούμε τις μεταβλητές σε ένα SHT_block_info.
+As an identifier in the `SHT_info` struct, we have a string that has the value "Secondary HashTable" so that we know that the structure is indeed a Secondary Hash Table. We do not unpin the 1st block except in the `Closefile` function. Data is inserted at the end of the file, and if it doesn't fit in the already existing block, we create a new one. We follow the same implementation as the Hash Table, with the difference that we insert pairs consisting of the name of each record and the number of the block it resides in the Hash Table.
 
-**SHT_OpenSecondaryIndex**
-Αποκτάμε πρόσβαση στο πρώτο block με τα μεταδεδομένα του αρχείου και τα αντιγράφουμε σε έναν άλλο δείκτη τον οποίο και επιστρέφουμε.
+**sht_metadata:**
+We call this function each time we want to create a new block in each bucket and initialize the variables in an `SHT_block_info`.
 
-**SHT_SecondaryGetAllEntries:** Προσπελαύνουμε όλες τις εγγραφές σειριακά 
+**SHT_OpenSecondaryIndex:**
+We access the first block with the metadata of the file and copy it to another pointer, which we then return.
 
-Στο block 0 του αρχείου κρατάμε τα μεταδεδομένα στα οποία συμπεριλαμβάνεται ένας πίνακας που το index του αντιστοιχεί στον αριθμό του bucket. Σε κάθε θέση του πίνακα βρίσκεται ο αριθμός του τελευταίου block του αντίστοιχου bucket.
-Επίσης στο struct HT_info κρατάμε μια πληροφορία ένα string το οποίο όταν έχει την τιμή "HashTable" για να γνωρίζουμε ότι η δομή πρόκειται όντως για HashTable. 
-Τα μεταδεδόμενα κάθε block (HT_block_info) κρατάνε τον αριθμό του προηγούμενου block και αυτόν των τρέχουσων εγγραφών στο block.
+**SHT_SecondaryGetAllEntries:** 
+We access all entries sequentially.
 
-**SHT_CreateSecondaryIndex:** Όταν δημιουργούμε τα μεταδεδομένα δημιουργούμε και ένα αριθμό blocks αντίστοιχο στον αριθμό buckets που έχουμε ώστε να μπορεί να γίνει αντιστοίχιση στον πίνακα. Επειδή πρόκειται για τα αρχικά block και δεν έχουν προηγούμενο, η τιμή αυτή στα μεταδεδομένα θα είναι -1. Δεν κάνουμε unpin το πρώτο block του αρχείου δίοτι κρατά τα μεταδεδομένα και θέλουμε να μείνει στη μνήμη. 
+In the block 0 of the file, we store metadata, including an array where the index corresponds to the bucket number. At each position of the array, there is the number of the last block of the corresponding bucket.
+Additionally, in the `HT_info` struct, we store information, a string that when it has the value "HashTable" to know that the structure is indeed a HashTable.
+The metadata of each block (`HT_block_info`) holds the number of the previous block and the current records in the block.
+
+**SHT_CreateSecondaryIndex:** 
+When creating metadata, we also create a number of blocks corresponding to the number of buckets so that mapping to the array can occur. Since these are initial blocks and have no predecessor, the value in the metadata will be -1. We do not unpin the first block of the file as it holds the metadata, and we want it to remain in memory.
 
 **SHT_SecondaryInsertEntry:**
-Όταν κάνουμε μια εισαγωγή εγγραφής ελέγχουμε εαν το τελευταίο block χωράει αλλιώς δημιουργούμε νέο block και με τη βοήθεια της συνάρτησης `sht_metadata` αρχικοποιούμε τα μεταδεδομένα του. Ανανεώνουμε τα μεταδεδομένα του αρχείου, αφού έχει αλλάξει το τελευταίο block του bucket και γράφουμε τις αλλαγές αυτές στο block 0. Αν το τελευταίο block χωράει κι άλλη εγγραφή τότε η εγγραφή εισάγεται σε αυτό. Τέλος, αυξάνουμε τον αριθμό των εγγραφών στο συγκεκριμένο block.
+When inserting a record, we check if the last block fits; otherwise, we create a new one and initialize its metadata using the `sht_metadata` function. We update the metadata of the file, as the last block of the bucket has changed, and write these changes to block 0. If the last block can accommodate more entries, the entry is inserted there. Finally, we increment the number of entries in that particular block.
 
-**SHT_CloseSecondaryIndex:** Εδώ γίνεται unpin το block 0.
+**SHT_CloseSecondaryIndex:** 
+Here, block 0 is unpinned.
 
-**SHT_SecondaryGetAllEntries:** Hasharουμε το κλειδί που μας δίνεται από την συνάρτηση (name) και προσπελαύνουμε τα blocks του bucket ξεκινώντας από το τελευταίο και πηγαίνοντας αναδρομικά προς τα πίσω στο πρώτο, ελέγχοντας τις εγγραφές του κάθε block. Αφού βρούμε το ζητούμενο όνομα, έχουμε πρόσβαση στο block της εγγραφής στο HashTable και έπειτα προσπελαύνουμε όλες τις εγγραφές του για να εντοπίσουμε ολόκληρη την εγγραφή. Επιστρέφει τον αριθμο blocks που έχουμε προσπελάσει.
+**SHT_SecondaryGetAllEntries:** 
+We hash the key given by the function and access the bucket blocks starting from the last and recursively moving backward to the first, checking the records of each block. After finding the required name, we have access to the block of the entry in the Hash Table, and then we access all the entries to locate the entire record. It returns the number of blocks accessed.
 
-**HashStatistics:** Ακολουθούμε παρόμοια λογική με την συνάρτηση `SHT_SecondaryGetAllEntries`, μόνο που τώρα αποκτάμε πρόσβαση στα μεταδεδομένα του αρχείου πρώτα μέσα από το block 0. Υπολογίζουμε το πόσα blocks έχει ένα αρχείο και από όλα τα buckets βρίσκουμε ποιο έχει το ελάχιστο, το μέσο και το μέγιστο πλήθος εγγραφών. Ακόμη, υπολογίζουμε το μέσο αριθμό των blocks που έχει κάθε bucket και το πλήθος των buckets που έχουν μπλοκ υπερχείλισης, και πόσα μπλοκ είναι αυτά για κάθε bucket όπως ζητείται.
+**HashStatistics:** 
+Following a similar logic to the `SHT_SecondaryGetAllEntries` function, we now access the file's metadata first through block 0. We calculate how many blocks a file has and from all the buckets, find which has the minimum, mean, and maximum number of records. Additionally, we calculate the mean number of blocks each bucket has and the number of buckets that have overflow blocks, along with how many blocks they are for each bucket as required.
 
-Παρατηρούμε οτι με βάση το hash function που γίνεται με τον αύξοντα αριθμό του id, οι εγγραφές θα είναι ισομοιρασμένες στα buckets. Επομένως τρέχοντας το `HashStatistics` περιμένουμε ίσο ελάχιστο, μέσο και μέγιστο αριθμό εγγραφών ανα block για το hashtable.
+Observing that entries will be evenly distributed in buckets based on the hash function using the incrementing id number, we expect equal minimum, mean, and maximum numbers of records per block by running the `HashStatistics` function.
 
-Επειδή διαφέρουν oι δομές και τα πεδία τους καλούμε διαφορετική συνάρτηση ανάλογα με το για ποια δομή ενδιαφερόμαστε για να είναι πιο καθαρός ο κώδικας.Το σκεπτικό όμως παραμένει ακριβώς ίδιο.
+Because the structures and their fields differ, we call different functions depending on which structure we are interested in to keep the code clear. However, the logic remains exactly the same.
+
 
 ## Makefile
 Use the Makefile to compile, run and clean using the following commands:
